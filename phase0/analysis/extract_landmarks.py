@@ -19,12 +19,9 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 
-ROTATIONS = {
-    "none": None,
-    "cw90": cv2.ROTATE_90_CLOCKWISE,
-    "ccw90": cv2.ROTATE_90_COUNTERCLOCKWISE,
-    "180": cv2.ROTATE_180,
-}
+# Rotation names -> cv2 constants, resolved lazily: cv2 is imported inside
+# functions here, not at module scope, so a bare reference at import time fails.
+ROTATION_NAMES = ("none", "cw90", "ccw90", "180")
 
 
 def apply_rotation(frame, name):
@@ -33,7 +30,15 @@ def apply_rotation(frame, name):
     Applied before landmark detection. Raw footage on disk stays untouched, so
     a wrong choice here is re-runnable without re-recording.
     """
-    code = ROTATIONS.get(name)
+    import cv2
+
+    codes = {
+        "none": None,
+        "cw90": cv2.ROTATE_90_CLOCKWISE,
+        "ccw90": cv2.ROTATE_90_COUNTERCLOCKWISE,
+        "180": cv2.ROTATE_180,
+    }
+    code = codes.get(name)
     return frame if code is None else cv2.rotate(frame, code)
 
 
