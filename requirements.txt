@@ -1,0 +1,11 @@
+# Pins verified on macOS 26.2 arm64 (M3 Pro).
+# mediapipe 1.0.1 SIGABRTs on Apple Silicon at graph open (issue #6356) — do not bump.
+mediapipe==1.0.0
+# mediapipe pulls opencv-contrib-python; 5.x is a breaking major. Never also install opencv-python.
+opencv-contrib-python>=4.10,<5
+numpy>=2
+pynput>=1.7
+pyarrow>=17
+scipy>=1.14
+matplotlib>=3.9
+pytest>=8
