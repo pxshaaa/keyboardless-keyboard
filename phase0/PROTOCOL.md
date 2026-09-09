@@ -214,3 +214,40 @@ Also read the two secondary signals:
 
 A low pairing rate invalidates everything downstream. `analyze_drift` prints it as a loud
 warning rather than a footnote — treat that warning as a stop sign, not a caveat.
+
+---
+
+## Quick start: see it working before you record anything
+
+Run the live preview first. It answers, in a few seconds, the four things that
+are expensive to discover after a ten-minute session:
+
+```bash
+.venv/bin/python -m phase0.capture.preview --camera "iPhone 15 Pro Camera"
+```
+
+You should see your hands with a green skeleton, orange dots on the five
+fingertips, and a status bar reading `fps | hands: 2 | taps: N`. Tap the desk
+and the fingertip that hit it flashes red and the tap counter increments.
+Hover without touching and it should stay quiet.
+
+Keys: `q` or `ESC` quits, `SPACE` pauses.
+
+### What each warning means
+
+| Status bar shows | Meaning | Fix |
+|---|---|---|
+| `!! CAMERA FROZEN !!` | Reads are succeeding but every frame is byte-identical | Closed lid, covered lens, or a virtual camera with no source. Pick another camera. |
+| all black, `hands: 0` | Camera is live but pointed at nothing | The iPhone is face-down or in the dark. Mount it facing your desk. |
+| `hands: 0` with a visible image | MediaPipe is not finding hands | More light, less backlight, get both hands fully in frame, less extreme angle. |
+| `hands: 1` when both are down | One hand is clipped or occluded | Widen the framing or raise the phone. |
+| taps firing while you hover | Detector too sensitive for your setup | Note it; `detect_taps` thresholds are CLI-tunable offline. |
+
+Only start recording once you see a steady `hands: 2` and taps that fire when
+you tap and stay silent when you don't.
+
+To capture a short annotated clip to look at later (or to send to someone):
+
+```bash
+.venv/bin/python -m phase0.capture.preview --seconds 15 --save /tmp/preview.mp4
+```
