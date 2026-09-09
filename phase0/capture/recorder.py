@@ -343,8 +343,18 @@ def _permission_watchdog(rec: Recorder, grace: float = 10.0) -> None:
 
 
 def record(args: argparse.Namespace) -> int:
-    cam_index, cam_name = resolve_camera(args.camera)
-    cap = open_camera(cam_index, args.width, args.height, args.fps)
+    if getattr(args, "backend", "cv2") == "av":
+        # AVFoundation via pyobjc: reaches devices cv2 refuses (iPhone Desk View).
+        from phase0.capture.avsource import AVVideoSource
+
+        try:
+            cap = AVVideoSource(args.camera, args.width, args.height, args.fps)
+        except ValueError as exc:
+            raise SystemExit(str(exc))
+        cam_index, cam_name = -1, cap.name
+    else:
+        cam_index, cam_name = resolve_camera(args.camera)
+        cap = open_camera(cam_index, args.width, args.height, args.fps)
     if not cap.isOpened():
         cap.release()
         print(
@@ -547,6 +557,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--width", type=int, default=1920)
     p.add_argument("--height", type=int, default=1440)
     p.add_argument("--fps", type=float, default=60.0)
+    p.add_argument(
+        "--backend",
+        choices=["cv2", "av"],
+        default="cv2",
+        help="av = AVFoundation via pyobjc; needed for the iPhone Desk View camera",
+    )
     p.add_argument(
         "--out-root",
         default="data/sessions",
