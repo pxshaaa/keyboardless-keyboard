@@ -18,6 +18,25 @@ import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+
+ROTATIONS = {
+    "none": None,
+    "cw90": cv2.ROTATE_90_CLOCKWISE,
+    "ccw90": cv2.ROTATE_90_COUNTERCLOCKWISE,
+    "180": cv2.ROTATE_180,
+}
+
+
+def apply_rotation(frame, name):
+    """Rotate in software so the phone's physical orientation doesn't matter.
+
+    Applied before landmark detection. Raw footage on disk stays untouched, so
+    a wrong choice here is re-runnable without re-recording.
+    """
+    code = ROTATIONS.get(name)
+    return frame if code is None else cv2.rotate(frame, code)
+
+
 MODEL_URL = (
     "https://storage.googleapis.com/mediapipe-models/hand_landmarker/"
     "hand_landmarker/float16/1/hand_landmarker.task"
