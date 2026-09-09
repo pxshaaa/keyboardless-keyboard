@@ -3,7 +3,6 @@ import math
 import pytest
 
 from phase0.analysis.analyze_drift import (
-    CONFIDENT_MATCH_COST,
     FALLBACK_PITCH_PX_DEFAULT,
     KeyStats,
     align_phrase,
@@ -72,7 +71,7 @@ def test_unsorted_input_rejected():
 
 # --- key pitch ------------------------------------------------------------
 def _ks(key, x, y, n=20):
-    return KeyStats(key, n, x, y, 4.0, 2.0, 1.0, "index", 1.0)
+    return KeyStats(key, n, x, y, 4.0, 4.0, 2.0, 1.0, "index", 1.0)
 
 
 def test_pitch_from_home_row_is_the_median_adjacent_distance():
@@ -134,14 +133,14 @@ def test_perfect_transcription_aligns_one_to_one():
     assert len(al.matches) == len(chars)
     assert al.frac_confident == 1.0
     assert al.norm_cost == pytest.approx(0.0, abs=1e-9)
-    assert [c for c, _, _ in al.matches] == list(range(len(chars)))
+    assert [c for c, _, _, _ in al.matches] == list(range(len(chars)))
 
 
 def test_alignment_is_monotonic():
     chars = chars_of("pack my box with five dozen liquor jugs")
     al = align_phrase(chars, taps_for(chars, drop=(3, 11, 20), extra=((7, 8), (15, 8))))
-    cs = [c for c, _, _ in al.matches]
-    ts = [t for _, t, _ in al.matches]
+    cs = [c for c, _, _, _ in al.matches]
+    ts = [t for _, t, _, _ in al.matches]
     assert cs == sorted(cs) and ts == sorted(ts)
     assert len(set(cs)) == len(cs) and len(set(ts)) == len(ts)
 
@@ -150,16 +149,23 @@ def test_missed_taps_leave_those_characters_unlabelled_not_shifted():
     chars = chars_of("the five boxing wizards jump quickly")
     dropped = {5, 12, 19}
     al = align_phrase(chars, taps_for(chars, drop=tuple(dropped)))
-    matched = {c for c, _, cost in al.matches if cost < CONFIDENT_MATCH_COST}
-    assert dropped.isdisjoint(matched)
-    assert matched == set(range(len(chars))) - dropped
+    confident = {c for c, _, _, conf in al.matches if conf}
+    assert dropped.isdisjoint(confident)
+    assert 0.4 < al.frac_confident < 1.0  # the three damaged words are withheld, the rest survive
+
+
+def test_a_word_shifted_by_a_missing_tap_is_never_marked_confident():
+    chars = chars_of("we promptly judged antique ivory buckles")
+    al = align_phrase(chars, taps_for(chars, drop=(21,)))
+    bad = [(ci, ti) for ci, ti, _c, conf in al.matches if conf and ci - ti not in (0, 1)]
+    assert bad == []
 
 
 def test_hallucinated_taps_are_absorbed_as_insertions():
     chars = chars_of("sphinx of black quartz")
     al = align_phrase(chars, taps_for(chars, extra=((4, 8), (9, 8), (14, 8))))
     assert len(al.matches) <= len(chars)
-    assert al.frac_confident > 0.7
+    assert 0.3 < al.frac_confident < 1.0  # only the untouched word is trusted
 
 
 def test_space_thumb_disagreement_costs_more():
