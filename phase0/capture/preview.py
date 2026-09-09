@@ -23,6 +23,25 @@ import numpy as np
 
 from phase0.capture.devices import resolve
 
+
+ROTATIONS = {
+    "none": None,
+    "cw90": cv2.ROTATE_90_CLOCKWISE,
+    "ccw90": cv2.ROTATE_90_COUNTERCLOCKWISE,
+    "180": cv2.ROTATE_180,
+}
+
+
+def apply_rotation(frame, name):
+    """Rotate in software so the phone's physical orientation doesn't matter.
+
+    Applied before landmark detection. Raw footage on disk stays untouched, so
+    a wrong choice here is re-runnable without re-recording.
+    """
+    code = ROTATIONS.get(name)
+    return frame if code is None else cv2.rotate(frame, code)
+
+
 FINGERTIPS = {4: "thumb", 8: "index", 12: "middle", 16: "ring", 20: "pinky"}
 # MediaPipe hand skeleton edges.
 EDGES = [(0,1),(1,2),(2,3),(3,4), (0,5),(5,6),(6,7),(7,8), (5,9),(9,10),(10,11),(11,12),
@@ -98,6 +117,8 @@ def main(argv=None) -> int:
     p.add_argument("--camera", default="iPhone 15 Pro Camera")
     p.add_argument("--width", type=int, default=1920)
     p.add_argument("--height", type=int, default=1440)
+    p.add_argument("--rotate", default="none", choices=list(ROTATIONS),
+                   help="rotate frames before detection: none|cw90|ccw90|180")
     p.add_argument("--scale", type=float, default=0.5, help="display scale")
     p.add_argument("--model", default="models/hand_landmarker.task")
     p.add_argument("--save", default=None, help="also write an annotated mp4 here")
@@ -142,6 +163,7 @@ def main(argv=None) -> int:
         if not ok:
             print("read failed", file=sys.stderr)
             break
+        frame = apply_rotation(frame, args.rotate)
         now = time.monotonic()
         if args.seconds and now - t_start > args.seconds:
             break
