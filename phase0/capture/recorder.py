@@ -343,12 +343,22 @@ def _permission_watchdog(rec: Recorder, grace: float = 10.0) -> None:
 
 
 def record(args: argparse.Namespace) -> int:
-    if getattr(args, "backend", "cv2") == "av":
+    backend = getattr(args, "backend", "cv2")
+    if backend == "av":
         # AVFoundation via pyobjc: reaches devices cv2 refuses (iPhone Desk View).
         from phase0.capture.avsource import AVVideoSource
 
         try:
             cap = AVVideoSource(args.camera, args.width, args.height, args.fps)
+        except ValueError as exc:
+            raise SystemExit(str(exc))
+        cam_index, cam_name = -1, cap.name
+    elif backend == "net":
+        # WideCam iPhone MJPEG over WiFi; --camera is "auto" (Bonjour), an IP, or a URL.
+        from phase0.capture.netsource import NetVideoSource
+
+        try:
+            cap = NetVideoSource(args.camera)
         except ValueError as exc:
             raise SystemExit(str(exc))
         cam_index, cam_name = -1, cap.name
@@ -559,9 +569,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--fps", type=float, default=60.0)
     p.add_argument(
         "--backend",
-        choices=["cv2", "av"],
+        choices=["cv2", "av", "net"],
         default="cv2",
-        help="av = AVFoundation via pyobjc; needed for the iPhone Desk View camera",
+        help="av = AVFoundation via pyobjc (iPhone Desk View); "
+        "net = WideCam iPhone stream over WiFi (--camera auto|IP|URL)",
     )
     p.add_argument(
         "--out-root",

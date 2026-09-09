@@ -125,8 +125,9 @@ def main(argv=None) -> int:
     p.add_argument("--seconds", type=float, default=0.0, help="0 = until quit")
     p.add_argument("--headless", action="store_true",
                    help="no window; use with --save to produce a video to inspect")
-    p.add_argument("--backend", choices=["cv2", "av"], default="cv2",
-                   help="av = AVFoundation via pyobjc; needed for the iPhone Desk View camera")
+    p.add_argument("--backend", choices=["cv2", "av", "net"], default="cv2",
+                   help="av = AVFoundation via pyobjc (iPhone Desk View); "
+                        "net = WideCam iPhone stream over WiFi (--camera auto|IP|URL)")
     args = p.parse_args(argv)
 
     import mediapipe as mp
@@ -136,6 +137,10 @@ def main(argv=None) -> int:
     if args.backend == "av":
         from phase0.capture.avsource import AVVideoSource
         cap = AVVideoSource(args.camera, args.width, args.height)
+        idx, name = -1, cap.name
+    elif args.backend == "net":
+        from phase0.capture.netsource import NetVideoSource
+        cap = NetVideoSource(args.camera)
         idx, name = -1, cap.name
     else:
         idx, name = resolve(args.camera)
