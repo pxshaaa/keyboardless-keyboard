@@ -125,14 +125,21 @@ def main(argv=None) -> int:
     p.add_argument("--seconds", type=float, default=0.0, help="0 = until quit")
     p.add_argument("--headless", action="store_true",
                    help="no window; use with --save to produce a video to inspect")
+    p.add_argument("--backend", choices=["cv2", "av"], default="cv2",
+                   help="av = AVFoundation via pyobjc; needed for the iPhone Desk View camera")
     args = p.parse_args(argv)
 
     import mediapipe as mp
     from mediapipe.tasks import python as mpp
     from mediapipe.tasks.python import vision
 
-    idx, name = resolve(args.camera)
-    cap = cv2.VideoCapture(idx, cv2.CAP_AVFOUNDATION if sys.platform == "darwin" else cv2.CAP_ANY)
+    if args.backend == "av":
+        from phase0.capture.avsource import AVVideoSource
+        cap = AVVideoSource(args.camera, args.width, args.height)
+        idx, name = -1, cap.name
+    else:
+        idx, name = resolve(args.camera)
+        cap = cv2.VideoCapture(idx, cv2.CAP_AVFOUNDATION if sys.platform == "darwin" else cv2.CAP_ANY)
     if not cap.isOpened():
         print(f"ERROR: cannot open camera {idx} ({name}). Grant Camera permission "
               "to your terminal in System Settings > Privacy & Security.", file=sys.stderr)
