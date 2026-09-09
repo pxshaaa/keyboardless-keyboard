@@ -37,11 +37,10 @@ MODIFIERS = {"shift", "ctrl", "alt", "cmd", "esc"}
 # alignment weights: rank-position mismatch dominates, thumb/space agreement is the
 # only real observational signal available on a bare desk.
 W_RANK = 4.0
-W_THUMB = 0.6
+W_THUMB = 2.0  # spaces are thumb taps and act as anchors, so disagreeing must be expensive
 GAP_DELETE = 0.5  # a typed character with no detected tap
 GAP_INSERT = 0.5  # a detected tap with no character
-CONFIDENT_MATCH_COST = 0.5
-MIN_FRAC_CONFIDENT = 0.70
+MIN_FRAC_CONFIDENT = 0.50  # damaged words are already withheld one by one; this drops whole phrases
 MAX_NORM_COST = 0.60
 TAP_COUNT_RATIO_RANGE = (0.60, 1.60)
 
@@ -213,7 +212,7 @@ def label_by_pairing(session: Session) -> None:
 # --- labelling path 2: desk phrase alignment ------------------------------
 @dataclass
 class Alignment:
-    matches: list[tuple[int, int, float]]  # (char_idx, tap_idx, match cost)
+    matches: list[tuple[int, int, float, bool]]  # (char_idx, tap_idx, cost, confident)
     total_cost: float
     norm_cost: float
     frac_confident: float
@@ -259,21 +258,39 @@ def align_phrase(chars: Sequence[str], taps: Sequence[dict]) -> Alignment:
             D[i, j] = cands[k]
             ptr[i, j] = k
 
-    matches: list[tuple[int, int, float]] = []
+    raw: list[tuple[int, int, float]] = []
     i, j = n, m
     while i > 0 or j > 0:
         k = ptr[i, j]
         if k == 0 and i > 0 and j > 0:
-            matches.append((i - 1, j - 1, float(match[i - 1, j - 1])))
+            raw.append((i - 1, j - 1, float(match[i - 1, j - 1])))
             i, j = i - 1, j - 1
         elif k == 1 and i > 0:
             i -= 1
         else:
             j -= 1
-    matches.reverse()
-    confident = [mm for mm in matches if mm[2] < CONFIDENT_MATCH_COST]
+    raw.reverse()
+    matches = _mark_confident(raw, is_space, is_thumb, n, m)
     total = float(D[n, m])
-    return Alignment(matches, total, total / n, len(confident) / n, n, m)
+    n_conf = sum(1 for mm in matches if mm[3])
+    return Alignment(matches, total, total / n, n_conf / n, n, m)
+
+
+def _mark_confident(raw, is_space, is_thumb, n, m):
+    """A match is trusted only inside a word segment that aligned gap-free between two
+    space/thumb anchors - cost alone would wave through a whole word shifted by two keys."""
+    ok = [is_space[c] == is_thumb[t] for c, t, _ in raw]
+    anchors = [k for k, (c, t, _) in enumerate(raw) if is_space[c] and ok[k]]
+    conf = [False] * len(raw)
+    bounds = [(-1, -1, -1)] + [(k, raw[k][0], raw[k][1]) for k in anchors] + [(len(raw), n, m)]
+    for (ka, ca, ta), (kb, cb, tb) in zip(bounds, bounds[1:]):
+        inner = kb - ka - 1
+        if inner == cb - ca - 1 == tb - ta - 1:
+            for k in range(ka + 1, kb):
+                conf[k] = ok[k]
+        if 0 <= kb < len(raw):
+            conf[kb] = True
+    return [(c, t, cost, conf[k]) for k, (c, t, cost) in enumerate(raw)]
 
 
 def label_by_phrases(session: Session) -> None:
@@ -302,8 +319,8 @@ def label_by_phrases(session: Session) -> None:
             )
             continue
         used_phrases += 1
-        for ci, ti, cost in al.matches:
-            if cost >= CONFIDENT_MATCH_COST:
+        for ci, ti, _cost, confident in al.matches:
+            if not confident:
                 continue
             tap = taps[ti]
             records.append(
@@ -363,6 +380,7 @@ class KeyStats:
     cx: float
     cy: float
     var_px2: float  # mean squared radial distance to centroid = trace of covariance
+    var_trim_px2: float  # same with the farthest 10% dropped, to expose label contamination
     spread_px: float
     det_cov: float
     finger: str
@@ -379,11 +397,15 @@ def key_points(session: Session) -> dict[str, list[dict]]:
 def summarise_key(key: str, pts: list[dict]) -> KeyStats:
     xy = np.array([[p["x"], p["y"]] for p in pts], dtype=float)
     c = xy.mean(axis=0)
-    var = float(((xy - c) ** 2).sum(axis=1).mean())
+    r2 = ((xy - c) ** 2).sum(axis=1)
+    var = float(r2.mean())
+    keep = r2 <= np.quantile(r2, 0.90)
+    xt = xy[keep]
+    var_trim = float(((xt - xt.mean(axis=0)) ** 2).sum(axis=1).mean()) if len(xt) > 1 else var
     cov = np.cov(xy.T) if len(xy) > 1 else np.zeros((2, 2))
     fingers = Counter(FINGER_NAMES.get(int(p["finger"]), f"j{p['finger']}") for p in pts)
     top, cnt = fingers.most_common(1)[0]
-    return KeyStats(key, len(pts), float(c[0]), float(c[1]), var, math.sqrt(var), float(np.linalg.det(cov)), top, cnt / len(pts))
+    return KeyStats(key, len(pts), float(c[0]), float(c[1]), var, var_trim, math.sqrt(var), float(np.linalg.det(cov)), top, cnt / len(pts))
 
 
 # --- key pitch ------------------------------------------------------------
@@ -491,7 +513,7 @@ def write_plot(path: Path, kbd_pts, desk_pts, keys: list[str], meta: dict) -> st
         ax.set_ylim(meta["height"], 0)
     else:
         ax.invert_yaxis()
-    ax.set_aspect("equal", adjustable="datalim")
+    ax.set_aspect("equal", adjustable="box")
     fig.tight_layout()
     fig.savefig(path, dpi=140)
     plt.close(fig)
@@ -529,6 +551,7 @@ def analyze(kbd_dir: Path, desk_dir: Path) -> dict:
                 "var_kbd": a.var_px2,
                 "var_desk": b.var_px2,
                 "var_ratio": b.var_px2 / a.var_px2 if a.var_px2 > 0 else float("inf"),
+                "var_ratio_trim": b.var_trim_px2 / a.var_trim_px2 if a.var_trim_px2 > 0 else float("inf"),
                 "spread_kbd": a.spread_px,
                 "spread_desk": b.spread_px,
                 "finger_kbd": a.finger,
@@ -542,6 +565,8 @@ def analyze(kbd_dir: Path, desk_dir: Path) -> dict:
     med_shift = statistics.median([r["shift_pitch"] for r in rows]) if rows else float("nan")
     finite = [r["var_ratio"] for r in rows if math.isfinite(r["var_ratio"])]
     med_ratio = statistics.median(finite) if finite else float("nan")
+    finite_trim = [r["var_ratio_trim"] for r in rows if math.isfinite(r["var_ratio_trim"])]
+    med_ratio_trim = statistics.median(finite_trim) if finite_trim else float("nan")
     inconclusive = len(rows) < MIN_QUALIFYING_KEYS
     passed = (
         not inconclusive
@@ -561,6 +586,7 @@ def analyze(kbd_dir: Path, desk_dir: Path) -> dict:
         "qualifying": qualifying,
         "median_shift_pitch": med_shift,
         "median_var_ratio": med_ratio,
+        "median_var_ratio_trim": med_ratio_trim,
         "verdict": "INCONCLUSIVE" if inconclusive else ("PASS" if passed else "FAIL"),
         "inconclusive": inconclusive,
         "drift_desk": drift_over_time(desk),
@@ -673,6 +699,7 @@ def print_report(res: dict) -> None:
     p(f"#  keys qualifying        : {len(res['rows'])} (need >= {MIN_QUALIFYING_KEYS})")
     p(f"#  median centroid shift  : {res['median_shift_pitch']:.3f} key pitch  (threshold < {SHIFT_THRESHOLD_PITCH})")
     p(f"#  median variance ratio  : {res['median_var_ratio']:.3f} desk/kbd     (threshold < {VAR_RATIO_THRESHOLD})")
+    p(f"#  same, farthest 10% cut : {res['median_var_ratio_trim']:.3f}  (if this is far lower, residual mislabelling, not real spread)")
     p("#")
     if res["verdict"] == "PASS":
         p("#  >>> PASS - per-key landing positions survive removing the keyboard. Phase 2 proceeds.")
@@ -698,6 +725,7 @@ def write_markdown(path: Path, res: dict) -> None:
     a(f"| qualifying keys | {len(res['rows'])} | >= {MIN_QUALIFYING_KEYS} |")
     a(f"| median centroid shift | {res['median_shift_pitch']:.3f} pitch | < {SHIFT_THRESHOLD_PITCH} |")
     a(f"| median variance ratio (desk/kbd) | {res['median_var_ratio']:.3f} | < {VAR_RATIO_THRESHOLD} |")
+    a(f"| same, farthest 10% trimmed | {res['median_var_ratio_trim']:.3f} | diagnostic only |")
     a("\nThis is the decision criterion for whether Phase 2 proceeds.\n")
     w = _warnings(res)
     if w:
@@ -775,7 +803,7 @@ def main(argv: Iterable[str] | None = None) -> int:
     print(f"\nwrote {args.desk/'drift_report.md'}")
     if not args.no_plot:
         print(f"wrote {args.desk/'drift_scatter.png'}")
-    return 0 if res["verdict"] == "PASS" else 1
+    return {"PASS": 0, "FAIL": 1, "INCONCLUSIVE": 3}[res["verdict"]]
 
 
 if __name__ == "__main__":
