@@ -466,6 +466,54 @@ typed:    'we should talk about this in person' produced: 'keep all about the so
 - The invalid desk session (`20260910-181947-desk`) remains void; the user typed freely rather than
   transcribing, so its ground truth never matched.
 
+## Public footage for key identification — tested, does not help
+
+Question: can online typing footage replace the user's own recording time? The one suitable
+corpus (`andrewt28/keystroke-typing-videos`: 800 clips, 51,336 keydowns, top-down MacBook) was
+already shown not to help tap *detection*. It was then tested for the current bottleneck, **key
+identification**, where per-class data is thinnest (~110 labels per key for us vs ~1,900 public).
+Code: `phase0/analysis/keypre.py`. Results: `results/keypre/`.
+
+Setup notes that would otherwise bite: public keyboard is US QWERTY (y/z mapped by physical
+position onto the user's QWERTZ); public wrists are out of frame so MediaPipe's guessed wrist made
+every hand ~4x too large (hand scale now taken from knuckle width); contact crop taken 67 ms after
+keydown; labelled taps are 2,038 train + 172 held-out (not ~3,000), i.e. ~142 usable labels per
+minute of typing.
+
+**Pixel CNN, LOSO top-1 (3 seeds), from scratch vs public-pretrained then fine-tuned:**
+
+| our data | from scratch | pretrained | paired delta [95% CI] |
+|---|---|---|---|
+| 25% | 0.349 | 0.330 | -0.019 [-0.034, -0.004] |
+| 50% | 0.392 | 0.377 | -0.015 [-0.031, +0.000] |
+| 100% | 0.432 | 0.426 | -0.006 [-0.024, +0.011] |
+
+Worth -0.6 to -1.0 minutes of the user's recording time. Zero-shot (public model only) scores
+0.165 on the user's taps, below always guessing space (0.22), with hand identity at chance.
+
+**Desk CER** (same 40 tap streams, same reduced grid, leave-one-phrase-out): from scratch 0.416
+[0.357, 0.472] vs pretrained 0.442 [0.378, 0.504]; paired delta **+0.027 [-0.005, +0.061]** —
+no help.
+
+**Why it fails (measured):** on its own validation clips the public model gets 0.63 top-1, but
+0.40 from the still contact frame alone and only 0.15 from motion alone (chance-level). Shuffling
+fingertip patches between slots drops it to 0.19. It learned what that MacBook and camera look
+like, not the press. The user's crops and public crops are perfectly separable (domain AUC 1.000).
+Resolution, the y/z layout swap and tracking quality were each checked and ruled out.
+
+**Verdict:** online footage cannot substitute for the user's own typing for this project. The only
+suitable public dataset has now been tested for detection, key identification and desk decoding;
+none improves.
+
+**Integrity note on 0.416:** that number is **not** a new headline. The reduced grid was centred on
+operating points earlier desk folds had selected, so it carries desk-derived information and is
+optimistically biased. The honest best desk CER remains **0.448** (`hirecall.py`). The pretrained
+vs from-scratch *delta* is still valid because both arms share the same streams and grid.
+
+**Pose model:** pretraining on public hand-relative pose was also run at 25/50/100% x 3 seeds;
+final pose rows and the pose+pixel fused rows were still being produced when this was saved — see
+`results/keypre/` and re-run `keypre.py` report if incomplete.
+
 ## Next, in order of value
 1. **Record ~8 more minutes of ordinary typing.** The scaling curve has not flattened; this is
    the cheapest available improvement and should reach the low-to-mid 80s. Prioritise *varied*

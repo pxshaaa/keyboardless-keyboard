@@ -1,0 +1,354 @@
+{
+ "scratch pixels (hirecall's), same grid": {
+  "cer": [
+   0.4156804733727811,
+   0.3567138120689273,
+   0.47181217407335874
+  ],
+  "per": [
+   [
+    20,
+    38
+   ],
+   [
+    15,
+    34
+   ],
+   [
+    8,
+    33
+   ],
+   [
+    14,
+    35
+   ],
+   [
+    18,
+    34
+   ],
+   [
+    17,
+    29
+   ],
+   [
+    23,
+    36
+   ],
+   [
+    10,
+    33
+   ],
+   [
+    15,
+    34
+   ],
+   [
+    7,
+    33
+   ],
+   [
+    18,
+    35
+   ],
+   [
+    6,
+    36
+   ],
+   [
+    14,
+    30
+   ],
+   [
+    11,
+    35
+   ],
+   [
+    12,
+    34
+   ],
+   [
+    10,
+    36
+   ],
+   [
+    18,
+    35
+   ],
+   [
+    19,
+    32
+   ],
+   [
+    16,
+    34
+   ],
+   [
+    10,
+    30
+   ]
+  ],
+  "hyp": [
+   [
+    "the meeting moved to tuesday afternoon",
+    "the one the nice to the say been"
+   ],
+   [
+    "i will send the report later today",
+    "allow will see the replete a latter to a"
+   ],
+   [
+    "can you let me know if this works",
+    "day you let me one of this worse"
+   ],
+   [
+    "we should talk about this in person",
+    "one on all out those on person"
+   ],
+   [
+    "the weather has been nice all week",
+    "the other and he i ll"
+   ],
+   [
+    "thanks for getting back to me",
+    "than were the trotting acce to loo"
+   ],
+   [
+    "i think we need a different approach",
+    "i the read it for no"
+   ],
+   [
+    "let me know if you have questions",
+    "were now if you have stone"
+   ],
+   [
+    "the new version is ready on friday",
+    "the one aversion in one cried"
+   ],
+   [
+    "that is not the best way to do it",
+    "that is not see say to do it"
+   ],
+   [
+    "please review the attached document",
+    "i cooee the attached coached to"
+   ],
+   [
+    "we had a long talk about the project",
+    "we was a long all about the prospect"
+   ],
+   [
+    "it took longer than i expected",
+    "of it too longer the is coach"
+   ],
+   [
+    "looking forward to hearing from you",
+    "lifting correar to hearing one you"
+   ],
+   [
+    "that sounds like a reasonable plan",
+    "in there s like a reasonable on"
+   ],
+   [
+    "happy to help with anything you need",
+    "happy the book with anything you do"
+   ],
+   [
+    "the team agreed on the new timeline",
+    "of the tea tree one there we need"
+   ],
+   [
+    "i have added a few notes for you",
+    "we in headed a greatest corner you"
+   ],
+   [
+    "we can pick this up again tomorrow",
+    "we we foul this hoss again too"
+   ],
+   [
+    "everything is on track for now",
+    "i very nine is on track on"
+   ]
+  ]
+ },
+ "finetune pixels (public-pretrained)": {
+  "cer": [
+   0.4423076923076923,
+   0.37833827893175076,
+   0.5043741425141486
+  ],
+  "per": [
+   [
+    18,
+    38
+   ],
+   [
+    17,
+    34
+   ],
+   [
+    8,
+    33
+   ],
+   [
+    22,
+    35
+   ],
+   [
+    19,
+    34
+   ],
+   [
+    19,
+    29
+   ],
+   [
+    25,
+    36
+   ],
+   [
+    10,
+    33
+   ],
+   [
+    14,
+    34
+   ],
+   [
+    4,
+    33
+   ],
+   [
+    19,
+    35
+   ],
+   [
+    9,
+    36
+   ],
+   [
+    13,
+    30
+   ],
+   [
+    12,
+    35
+   ],
+   [
+    14,
+    34
+   ],
+   [
+    14,
+    36
+   ],
+   [
+    18,
+    35
+   ],
+   [
+    16,
+    32
+   ],
+   [
+    19,
+    34
+   ],
+   [
+    9,
+    30
+   ]
+  ],
+  "hyp": [
+   [
+    "the meeting moved to tuesday afternoon",
+    "the one the nice to the say been on"
+   ],
+   [
+    "i will send the report later today",
+    "look all see the repellatter took ye"
+   ],
+   [
+    "can you let me know if this works",
+    "lay you let me one of this worse"
+   ],
+   [
+    "we should talk about this in person",
+    "people all horror those one erroneo"
+   ],
+   [
+    "the weather has been nice all week",
+    "the other and he fell"
+   ],
+   [
+    "thanks for getting back to me",
+    "than were the trotting all too poor"
+   ],
+   [
+    "i think we need a different approach",
+    "to the read it for no"
+   ],
+   [
+    "let me know if you have questions",
+    "were now if you have stone"
+   ],
+   [
+    "the new version is ready on friday",
+    "the one aversion in on a rid o"
+   ],
+   [
+    "that is not the best way to do it",
+    "that is not the near say to do it"
+   ],
+   [
+    "please review the attached document",
+    "done the attached cheese to"
+   ],
+   [
+    "we had a long talk about the project",
+    "we was a long all a not the prospect"
+   ],
+   [
+    "it took longer than i expected",
+    "of it look longer the is coache"
+   ],
+   [
+    "looking forward to hearing from you",
+    "king greater to hearing on you"
+   ],
+   [
+    "that sounds like a reasonable plan",
+    "in there s a like a reasonable on"
+   ],
+   [
+    "happy to help with anything you need",
+    "boy the book with anything you do"
+   ],
+   [
+    "the team agreed on the new timeline",
+    "of the tea tree one there we need"
+   ],
+   [
+    "i have added a few notes for you",
+    "in headed we ages carry you"
+   ],
+   [
+    "we can pick this up again tomorrow",
+    "we we could the hoss again too"
+   ],
+   [
+    "everything is on track for now",
+    "very nine is on track o morrow"
+   ]
+  ]
+ },
+ "delta": [
+  0.026627218934911212,
+  -0.004518072289156627,
+  0.06056129985228953
+ ],
+ "delta_official": [
+  -0.00591715976331364,
+  -0.06131610961710842,
+  0.04762087912087909
+ ]
+}
