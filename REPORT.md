@@ -563,3 +563,17 @@ The matched desk check was still finishing on the Mac mini when this was saved; 
 ## Test suite
 211 tests, plus 20 in `test_online_taps.py` which must run separately (LightGBM and MediaPipe
 in one process abort during a model load).
+
+## Run 5 (2026-09-11): +12.5 min of natural keyboard typing
+
+Session `20260911-164237-kbd`: 1,734 keydowns, 0 dropped frames; tap detector (unchanged model) F1 71.2% on it (R 74.1%, P 68.5%), so only 1,109 usable labels (~89/min).
+Rerun of the from-scratch key-ID table with it as a 4th training session (`KEYPRE_EXTRA`, probs in `.cache/keypre/probs_run5`, `results/keypre/keys_run5.json`):
+
+| fused pose+pixel | training taps | held-out 015948 top-1 | 95% CI |
+|---|---|---|---|
+| before (3 sessions) | 2,038 | 0.638 | — |
+| run 5, 25% | 786 | 0.517 | [0.453, 0.579] |
+| run 5, 50% | 1,573 | 0.591 | [0.525, 0.655] |
+| run 5, 100% | 3,147 | **0.657** | [0.589, 0.723] |
+
++1.9 points held-out; within noise on its own, but the in-run curve still climbs ~6.6–7.4 points per doubling (no flattening yet). 4-session LOSO 0.588 (not comparable to the old 3-session 0.495: different folds).
