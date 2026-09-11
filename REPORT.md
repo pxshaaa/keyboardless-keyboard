@@ -501,6 +501,27 @@ fingertip patches between slots drops it to 0.19. It learned what that MacBook a
 like, not the press. The user's crops and public crops are perfectly separable (domain AUC 1.000).
 Resolution, the y/z layout swap and tracking quality were each checked and ruled out.
 
+**Completed accuracy table** (mean over 3 seeds; LOSO = leave-one-session-out over the three
+keyboard sessions, held = `20260910-015948-kbd`; `results/keypre/keys.json`):
+
+| model | condition | 25% | 50% | 100% |
+|---|---|---|---|---|
+| pose (absolute, production) | from scratch | 0.346 / 0.469 | 0.358 / 0.556 | **0.369 / 0.576** |
+| pose (hand-relative) | from scratch | 0.349 / 0.380 | 0.361 / 0.417 | 0.280 / 0.452 |
+| pose (hand-relative) | public-pretrained | 0.346 / 0.293 | 0.292 / 0.147 | 0.146 / 0.126 |
+| pose | zero-shot (public only) | — | — | 0.186 / 0.114 |
+| pixel CNN | from scratch | 0.349 / 0.434 | 0.392 / 0.516 | **0.432 / 0.560** |
+| pixel CNN | public-pretrained | 0.330 / 0.407 | 0.377 / 0.469 | 0.426 / 0.545 |
+| pixel CNN | zero-shot (public only) | — | — | 0.165 / 0.153 |
+| **fused pose+pixel** | **both from scratch** | 0.368 / 0.523 | 0.433 / 0.574 | **0.495 / 0.638** |
+| fused pose+pixel | pixel pretrained | 0.355 / 0.481 | 0.443 / 0.581 | 0.480 / 0.610 |
+| fused pose+pixel | both pretrained | 0.376 / 0.308 | 0.338 / 0.421 | 0.426 / 0.545 |
+
+(cells are LOSO top-1 / held-out top-1.) Pretraining is at or below from-scratch in every family at
+every fraction, and the fine-tuned hand-relative pose model degrades catastrophically as more of our
+data is added (0.346 -> 0.146 LOSO), the collapse described below. Best configuration remains
+**both models trained from scratch on our data alone: 0.495 LOSO / 0.638 held-out**.
+
 **Verdict:** online footage cannot substitute for the user's own typing for this project. The only
 suitable public dataset has now been tested for detection, key identification and desk decoding;
 none improves.

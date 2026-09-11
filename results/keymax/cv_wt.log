@@ -1,0 +1,85 @@
+pinned inputs:
+  data/sessions/20260910-202149-desk/landmarks.parquet md5 2fff8f549fc7
+  models/taps_gb.joblib md5 e9eb793a870a
+  models/charlm.npz md5 322885ae2304
+  .cache/hirecall/streams_base+rec.json md5 c97116d42032
+  .cache/hirecall/20260910-202149-desk_ftips.npy md5 77f513dd5abb
+  .cache/keymax/table_base+rec_posewide_pixWT.json md5 1e430e878ffe
+  20260910-015217-kbd/taps_contact.jsonl md5 b4451069611f  (key-model labels)
+  20260910-021315-kbd/taps_contact.jsonl md5 00acafcac9ea  (key-model labels)
+  20260910-131629-kbd/taps_contact.jsonl md5 ac6098d20ae9  (key-model labels)
+/Users/pashaalidadi/Documents/misc/computer-vision-test/phase0/analysis/tap_pos.py:145: RuntimeWarning: Mean of empty slice
+  cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
+/Users/pashaalidadi/Documents/misc/computer-vision-test/phase0/analysis/tap_pos.py:145: RuntimeWarning: Mean of empty slice
+  cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
+/Users/pashaalidadi/Documents/misc/computer-vision-test/phase0/analysis/tap_pos.py:145: RuntimeWarning: Mean of empty slice
+  cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
+/Users/pashaalidadi/Documents/misc/computer-vision-test/phase0/analysis/tap_pos.py:145: RuntimeWarning: Mean of empty slice
+  cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
+/Users/pashaalidadi/Documents/misc/computer-vision-test/phase0/analysis/tap_pos.py:145: RuntimeWarning: Mean of empty slice
+  cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
+/Users/pashaalidadi/Documents/misc/computer-vision-test/phase0/analysis/tap_pos.py:145: RuntimeWarning: Mean of empty slice
+  cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
+/Users/pashaalidadi/Documents/misc/computer-vision-test/phase0/analysis/tap_pos.py:145: RuntimeWarning: Mean of empty slice
+  cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
+/Users/pashaalidadi/Documents/misc/computer-vision-test/phase0/analysis/tap_pos.py:145: RuntimeWarning: Mean of empty slice
+  cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
+/Users/pashaalidadi/Documents/misc/computer-vision-test/phase0/analysis/tap_pos.py:145: RuntimeWarning: Mean of empty slice
+  cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
+/Users/pashaalidadi/Documents/misc/computer-vision-test/phase0/analysis/tap_pos.py:145: RuntimeWarning: Mean of empty slice
+  cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
+/Users/pashaalidadi/Documents/misc/computer-vision-test/phase0/analysis/tap_pos.py:145: RuntimeWarning: Mean of empty slice
+  cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
+  phrase 5 sid=27 taps=1355 (2.00/char) a=0.75 obs=3.0 del=-9 CER=0.414
+  phrase 1 sid=27 taps=1355 (2.00/char) a=0.75 obs=3.0 del=-9 CER=0.471
+  phrase 3 sid=27 taps=1355 (2.00/char) a=0.75 obs=3.0 del=-9 CER=0.371
+  phrase 2 sid=27 taps=1355 (2.00/char) a=0.75 obs=3.0 del=-9 CER=0.242
+  phrase 4 sid=15 taps=1509 (2.23/char) a=0.75 obs=4.0 del=-5 CER=0.559
+  phrase 6 sid=27 taps=1355 (2.00/char) a=0.75 obs=3.0 del=-9 CER=0.556
+  phrase 7 sid=27 taps=1355 (2.00/char) a=0.75 obs=3.0 del=-9 CER=0.242
+  phrase 8 sid=27 taps=1355 (2.00/char) a=0.75 obs=3.0 del=-9 CER=0.324
+  phrase 9 sid=27 taps=1355 (2.00/char) a=0.75 obs=3.0 del=-9 CER=0.152
+  phrase10 sid=27 taps=1355 (2.00/char) a=0.75 obs=3.0 del=-9 CER=0.457
+  phrase12 sid=27 taps=1355 (2.00/char) a=0.75 obs=3.0 del=-9 CER=0.267
+  phrase11 sid=27 taps=1355 (2.00/char) a=0.75 obs=3.0 del=-9 CER=0.417
+  phrase13 sid=27 taps=1355 (2.00/char) a=0.75 obs=3.0 del=-9 CER=0.200
+  phrase14 sid=27 taps=1355 (2.00/char) a=0.75 obs=3.0 del=-9 CER=0.500
+  phrase15 sid=27 taps=1355 (2.00/char) a=0.75 obs=3.0 del=-9 CER=0.167
+  phrase17 sid=27 taps=1355 (2.00/char) a=0.75 obs=3.0 del=-9 CER=0.719
+  phrase16 sid=27 taps=1355 (2.00/char) a=0.75 obs=3.0 del=-9 CER=0.429
+  phrase18 sid=27 taps=1355 (2.00/char) a=0.75 obs=3.0 del=-9 CER=0.559
+  phrase19 sid=27 taps=1355 (2.00/char) a=0.75 obs=3.0 del=-9 CER=0.500
+/Users/pashaalidadi/Documents/misc/computer-vision-test/phase0/analysis/tap_pos.py:145: RuntimeWarning: Mean of empty slice
+  cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
+  phrase 0 sid=27 taps=1355 (2.00/char) a=0.75 obs=3.0 del=-9 CER=0.237
+
+[351.1s]
+
+posewide + pixWT                             CER=0.388 [0.322, 0.453]  WER=0.650
+  delta vs pose + pix (0.441): -0.053 [-0.095, -0.016]
+
+-- 8 decoded phrases --
+  CER=0.237 WER=0.667
+    typed:    'the meeting moved to tuesday afternoon'
+    produced: 'the letting and to the say afternoon'
+  CER=0.471 WER=0.857
+    typed:    'i will send the report later today'
+    produced: 'look will see the relate latter a to'
+  CER=0.242 WER=0.375
+    typed:    'can you let me know if this works'
+    produced: 'can you let me one of this posse'
+  CER=0.371 WER=0.714
+    typed:    'we should talk about this in person'
+    produced: 'see now all not this on person'
+  CER=0.559 WER=0.857
+    typed:    'the weather has been nice all week'
+    produced: 'the were s need of a'
+  CER=0.414 WER=0.667
+    typed:    'thanks for getting back to me'
+    produced: 'the for thing accept me'
+  CER=0.556 WER=0.857
+    typed:    'i think we need a different approach'
+    produced: 'in there were need it arran'
+  CER=0.242 WER=0.429
+    typed:    'let me know if you have questions'
+    produced: 'see me now if you have stone'
