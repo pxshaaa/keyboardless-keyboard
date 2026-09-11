@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import sys
 import time
 from collections import Counter
@@ -18,9 +19,11 @@ import lightgbm  # noqa: F401  must load before torch or the two libomp copies s
 from phase0.analysis.decode import A_INDEX, ALPHABET, NA
 
 CACHE = Path(".cache/keypre")
-PROBS = CACHE / "probs"
+# KEYPRE_PROBS/KEYPRE_EXTRA: rerun the table with extra kbd sessions without touching the cached one
+PROBS = CACHE / os.environ.get("KEYPRE_PROBS", "probs")
 HR_CACHE = Path(".cache/hirecall")
-KBD = ("20260910-015217-kbd", "20260910-021315-kbd", "20260910-131629-kbd")
+KBD = ("20260910-015217-kbd", "20260910-021315-kbd", "20260910-131629-kbd",
+       *os.environ.get("KEYPRE_EXTRA", "").split())
 HELD = "20260910-015948-kbd"
 DESK = "20260910-202149-desk"
 FOLDS = (*KBD, HELD)
