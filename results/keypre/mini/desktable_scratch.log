@@ -48,3 +48,12 @@ https://scikit-learn.org/stable/model_persistence.html#security-maintainability-
   cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
   5/40 streams (131s)
   10/40 streams (214s)
+  15/40 streams (318s)
+  20/40 streams (485s)
+  25/40 streams (613s)
+  30/40 streams (710s)
+  35/40 streams (802s)
+  40/40 streams (873s)
+
+[874.0s]
+-> .cache/keypre/table_base+rec_scratch.json

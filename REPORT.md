@@ -491,9 +491,18 @@ minute of typing.
 Worth -0.6 to -1.0 minutes of the user's recording time. Zero-shot (public model only) scores
 0.165 on the user's taps, below always guessing space (0.22), with hand identity at chance.
 
-**Desk CER** (same 40 tap streams, same reduced grid, leave-one-phrase-out): from scratch 0.416
-[0.357, 0.472] vs pretrained 0.442 [0.378, 0.504]; paired delta **+0.027 [-0.005, +0.061]** —
-no help.
+**Desk CER** (same 40 tap streams, same reduced grid, leave-one-phrase-out). Two matched
+comparisons, both showing no benefit:
+
+| pixel model | CER [95% CI] |
+|---|---|
+| from scratch (hirecall's) | 0.416 [0.357, 0.472] |
+| public-pretrained, fine-tuned | 0.442 [0.378, 0.504] |
+| from scratch, retrained in the same loop | 0.416 [0.357, 0.472] |
+| public-pretrained (matched loop) | 0.432 [0.367, 0.493] |
+
+Paired deltas: **+0.027 [-0.005, +0.061]** and **+0.016 [-0.019, +0.055]**. Both positive (worse),
+both intervals touching zero.
 
 **Why it fails (measured):** on its own validation clips the public model gets 0.63 top-1, but
 0.40 from the still contact frame alone and only 0.15 from motion alone (chance-level). Shuffling
