@@ -499,3 +499,18 @@
   cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
 /Users/pashaalidadi/Documents/misc/computer-vision-test/phase0/analysis/tap_pos.py:145: RuntimeWarning: Mean of empty slice
   cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
+/Users/pashaalidadi/Documents/misc/computer-vision-test/phase0/analysis/tap_pos.py:145: RuntimeWarning: Mean of empty slice
+  cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
+/Users/pashaalidadi/Documents/misc/computer-vision-test/phase0/analysis/tap_pos.py:145: RuntimeWarning: Mean of empty slice
+  cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
+/Users/pashaalidadi/Documents/misc/computer-vision-test/phase0/analysis/tap_pos.py:145: RuntimeWarning: Mean of empty slice
+  cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
+/Users/pashaalidadi/Documents/misc/computer-vision-test/phase0/analysis/tap_pos.py:145: RuntimeWarning: Mean of empty slice
+  cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
+/Users/pashaalidadi/Documents/misc/computer-vision-test/phase0/analysis/tap_pos.py:145: RuntimeWarning: Mean of empty slice
+  cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
+/Users/pashaalidadi/Documents/misc/computer-vision-test/phase0/analysis/tap_pos.py:145: RuntimeWarning: Mean of empty slice
+  cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
+  pose stack_rel     frac=1.0 seed=2 (149s)
+
+[3431.5s]

@@ -510,9 +510,14 @@ operating points earlier desk folds had selected, so it carries desk-derived inf
 optimistically biased. The honest best desk CER remains **0.448** (`hirecall.py`). The pretrained
 vs from-scratch *delta* is still valid because both arms share the same streams and grid.
 
-**Pose model:** pretraining on public hand-relative pose was also run at 25/50/100% x 3 seeds;
-final pose rows and the pose+pixel fused rows were still being produced when this was saved — see
-`results/keypre/` and re-run `keypre.py` report if incomplete.
+**Pose model:** pretraining on public pose ties from-scratch at 25% of our labels and hurts clearly
+from 50% up. The absolute-coordinate pose model (production) scores 0.369 LOSO, matching keymax's
+0.371, and does not collapse. The hand-relative pose variant does collapse: with only two training
+sessions per LOSO fold it maps a whole held-out session onto one key (from scratch, 829 of 1,221
+taps in session 131629 predicted 'u'; fine-tuned from the public model, 1,018 taps predicted 'e' at
+mean top probability 0.99). No non-finite probabilities — this is a real failure mode, not a bug.
+The matched desk check was still finishing on the Mac mini when this was saved; its output lands in
+`.cache/keypre/` on the mini and must be copied into `results/keypre/`.
 
 ## Next, in order of value
 1. **Record ~8 more minutes of ordinary typing.** The scaling curve has not flattened; this is
