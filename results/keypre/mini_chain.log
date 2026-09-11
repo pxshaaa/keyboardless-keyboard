@@ -3,3 +3,6 @@ table_rc=0
 cv_rc=0
 copied back finetune
 shipped .cache/keypre/deskpix_scratch_3x40.npy md5 6cb27e9d0ae42799a4f5a23836729480
+table_rc=0
+cv_rc=0
+copied back scratch
