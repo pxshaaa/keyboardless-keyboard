@@ -9,14 +9,18 @@
 /* Begin PBXBuildFile section */
 		29918F70BED3D791FCBD30DC /* WideCamApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27416371D4393DE702E08AA7 /* WideCamApp.swift */; };
 		41FECB35C33547A19AF3FB9D /* MJPEGServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BD007753D33F2D50977196D /* MJPEGServer.swift */; };
+		A1C3AA31D25DE6D64EA661C6 /* DepthFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D1F4BDA4A9B4E75597A9189 /* DepthFrame.swift */; };
 		B971BE841BAA67896FC3725D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8FCBF910B9ED33DA9975AF7 /* ContentView.swift */; };
 		D1827056BFC65D68C36B12C0 /* CameraStreamer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A524146F0FF8410A9508FA9 /* CameraStreamer.swift */; };
+		DBBB378873C52648CC22C559 /* DepthProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8812BD3395DFEE52112B17B2 /* DepthProbe.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		27416371D4393DE702E08AA7 /* WideCamApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WideCamApp.swift; sourceTree = "<group>"; };
 		2A524146F0FF8410A9508FA9 /* CameraStreamer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraStreamer.swift; sourceTree = "<group>"; };
 		47B65AA60561412ED7A2E401 /* WideCam.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = WideCam.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4D1F4BDA4A9B4E75597A9189 /* DepthFrame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepthFrame.swift; sourceTree = "<group>"; };
+		8812BD3395DFEE52112B17B2 /* DepthProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepthProbe.swift; sourceTree = "<group>"; };
 		9BD007753D33F2D50977196D /* MJPEGServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MJPEGServer.swift; sourceTree = "<group>"; };
 		B8FCBF910B9ED33DA9975AF7 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		C6990A357CFD5157679B3E63 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -44,6 +48,8 @@
 			children = (
 				2A524146F0FF8410A9508FA9 /* CameraStreamer.swift */,
 				B8FCBF910B9ED33DA9975AF7 /* ContentView.swift */,
+				4D1F4BDA4A9B4E75597A9189 /* DepthFrame.swift */,
+				8812BD3395DFEE52112B17B2 /* DepthProbe.swift */,
 				C6990A357CFD5157679B3E63 /* Info.plist */,
 				9BD007753D33F2D50977196D /* MJPEGServer.swift */,
 				27416371D4393DE702E08AA7 /* WideCamApp.swift */,
@@ -112,6 +118,8 @@
 			files = (
 				D1827056BFC65D68C36B12C0 /* CameraStreamer.swift in Sources */,
 				B971BE841BAA67896FC3725D /* ContentView.swift in Sources */,
+				A1C3AA31D25DE6D64EA661C6 /* DepthFrame.swift in Sources */,
+				DBBB378873C52648CC22C559 /* DepthProbe.swift in Sources */,
 				41FECB35C33547A19AF3FB9D /* MJPEGServer.swift in Sources */,
 				29918F70BED3D791FCBD30DC /* WideCamApp.swift in Sources */,
 			);

@@ -21,6 +21,9 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from phase0.analysis.online_taps import AHEAD
+from phase0.analysis.online_taps import DEFAULT_MODEL as DEFAULT_TAP_MODEL
+from phase0.analysis.online_taps import OnlineTapModel, assign_sides
 from phase0.capture.devices import resolve
 
 
@@ -111,6 +114,16 @@ def draw_hand(img, pts, conf, taps_now):
             cv2.circle(img, p, 3, (200, 200, 200), -1, cv2.LINE_AA)
 
 
+def resolve_detector(name, model_path, ahead=AHEAD):
+    """-> (detector name, OnlineTapModel|None); the heuristic is the fallback when no model exists."""
+    if name == "model" and not Path(model_path).exists():
+        print(f"WARNING: {model_path} not found -- falling back to the crude heuristic detector, "
+              "which fires while your hands rest. Train one: python -m phase0.analysis.taps_gb train ...",
+              file=sys.stderr)
+        return "heuristic", None
+    return (name, OnlineTapModel(Path(model_path), ahead=ahead)) if name == "model" else (name, None)
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -125,6 +138,11 @@ def main(argv=None) -> int:
     p.add_argument("--seconds", type=float, default=0.0, help="0 = until quit")
     p.add_argument("--headless", action="store_true",
                    help="no window; use with --save to produce a video to inspect")
+    p.add_argument("--detector", choices=["heuristic", "model"], default="model",
+                   help="model = the trained taps_gb classifier (what the offline numbers measure)")
+    p.add_argument("--tap-model", default=str(DEFAULT_TAP_MODEL))
+    p.add_argument("--ahead", type=int, default=AHEAD,
+                   help="forward frames the model's centred filters see; this is the tap latency")
     p.add_argument("--backend", choices=["cv2", "av", "net"], default="cv2",
                    help="av = AVFoundation via pyobjc (iPhone Desk View); "
                         "net = WideCam iPhone stream over WiFi (--camera auto|IP|URL)")
@@ -156,7 +174,12 @@ def main(argv=None) -> int:
         base_options=mpp.BaseOptions(model_asset_path=str(ensure_model(Path(args.model)))),
         running_mode=vision.RunningMode.VIDEO, num_hands=2))
 
+    detector, model = resolve_detector(args.detector, args.tap_model, args.ahead)
+
     print(f"camera {idx}: {name}")
+    print(f"detector: {detector}" + (f" (thr={model.thr:.2f}, gate={model.gate_thr:.2f}, "
+                                     f"latency={model.latency_frames}-{model.max_latency_frames} frames)"
+                                     if model else ""))
     print("q/ESC quit | SPACE pause")
 
     writer = None
@@ -166,6 +189,7 @@ def main(argv=None) -> int:
     frozen_run = 0
     tap_flash: dict[tuple[int, int], float] = {}
     tap_total = 0
+    frame_i = 0
     t_start = time.monotonic()
     last_t = t_start
     paused = False
@@ -196,14 +220,38 @@ def main(argv=None) -> int:
             int((now - t_start) * 1000))
 
         h, w = frame.shape[:2]
+        hl = list(res.hand_landmarks or [])
+        labels = [res.handedness[i][0].category_name if res.handedness else "Unknown"
+                  for i in range(len(hl))]
+        # flash keys: side (Left/Right) for the model, raw slot for the heuristic
+        sides = assign_sides(labels)
+        if model is not None:
+            wl = res.hand_world_landmarks or []
+            packed = []
+            for hi, hand in enumerate(hl[:2]):
+                arr = np.full((21, 7), np.nan)
+                arr[:, 0] = [l.x * w for l in hand]
+                arr[:, 1] = [l.y * h for l in hand]
+                arr[:, 2] = res.handedness[hi][0].score if res.handedness else np.nan
+                arr[:, 3] = [l.z * w for l in hand]
+                if hi < len(wl):
+                    arr[:, 4:7] = [[q.x, q.y, q.z] for q in wl[hi]]
+                packed.append((labels[hi], arr))
+            for rec in model.push_hands(frame_i, now, packed):
+                tap_flash[(rec["hand"], rec["finger"])] = now
+                tap_total += 1
         taps_now: set[int] = set()
-        for hi, hand in enumerate(res.hand_landmarks or []):
+        for hi, hand in enumerate(hl):
             pts = [(int(l.x * w), int(l.y * h)) for l in hand]
-            for j in FINGERTIPS:
-                if tapper.update((hi, j), now, pts[j][1]):
-                    tap_flash[(hi, j)] = now
-                    tap_total += 1
-            hot = {j for j in FINGERTIPS if now - tap_flash.get((hi, j), -9e9) < 0.18}
+            if model is None:
+                for j in FINGERTIPS:
+                    if tapper.update((hi, j), now, pts[j][1]):
+                        tap_flash[(hi, j)] = now
+                        tap_total += 1
+                fkey = hi
+            else:
+                fkey = sides[hi]
+            hot = {j for j in FINGERTIPS if now - tap_flash.get((fkey, j), -9e9) < 0.18}
             taps_now |= hot
             conf = res.handedness[hi][0].score if res.handedness else 0.0
             draw_hand(frame, pts, conf, hot)
@@ -211,9 +259,13 @@ def main(argv=None) -> int:
             cv2.putText(frame, label, (pts[0][0] - 40, pts[0][1] + 40),
                         cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2, cv2.LINE_AA)
 
+        frame_i += 1
         fps = len(fps_hist) / sum(fps_hist) if sum(fps_hist) > 0 else 0.0
-        nh = len(res.hand_landmarks or [])
+        nh = len(hl)
+        prob = model.score if model is not None else 0.0
         bar = [f"{fps:5.1f} fps", f"hands: {nh}", f"taps: {tap_total}"]
+        if model is not None:
+            bar.append(f"score: {prob:.2f}")
         colour = (0, 255, 0) if nh else (0, 200, 255)
         if frozen_run > 15:
             bar.append("!! CAMERA FROZEN !!")
@@ -223,6 +275,13 @@ def main(argv=None) -> int:
         cv2.rectangle(frame, (0, 0), (w, 70), (0, 0, 0), -1)
         cv2.putText(frame, "   ".join(bar), (16, 48), cv2.FONT_HERSHEY_SIMPLEX,
                     1.2, colour, 3, cv2.LINE_AA)
+        if model is not None:
+            x0, x1, y0 = 16, min(w - 16, 336), 82
+            cv2.rectangle(frame, (x0, y0), (x1, y0 + 22), (0, 0, 0), -1)
+            cv2.rectangle(frame, (x0, y0), (x0 + int((x1 - x0) * min(prob, 1.0)), y0 + 22),
+                          (0, 0, 255) if prob >= model.thr else (0, 200, 255), -1)
+            xt = x0 + int((x1 - x0) * model.thr)
+            cv2.line(frame, (xt, y0 - 3), (xt, y0 + 25), (255, 255, 255), 2)
 
         if args.save:
             if writer is None:
@@ -245,7 +304,8 @@ def main(argv=None) -> int:
         print(f"wrote {args.save}")
     if not args.headless:
         cv2.destroyAllWindows()
-    print(f"total taps detected: {tap_total}")
+    print(f"total taps detected: {tap_total}  detector: {detector}"
+          + (f"  mean score: {model.mean_score:.3f}" if model is not None else ""))
     return 0
 
 

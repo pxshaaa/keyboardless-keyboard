@@ -45,6 +45,7 @@ struct ContentView: View {
                     Text(u).font(.system(.title3, design: .monospaced).bold())
                 }
                 Text("lens: \(streamer.lensName)   format: \(streamer.formatDescription)")
+                Text("mode: \(streamer.mode.rawValue)   depth: \(streamer.depthDescription)")
                 Text("fps: \(Int(streamer.fps))   clients: \(streamer.clients)   seq: \(streamer.seq)   dropped: \(streamer.dropped)   battery: \(batteryText)")
             }
             .font(.system(.body, design: .monospaced))
@@ -58,6 +59,16 @@ struct ContentView: View {
                 Spacer()
                 HStack {
                     Spacer()
+                    Button {
+                        streamer.setMode(streamer.mode == .rgb ? .depth : .rgb)
+                    } label: {
+                        Text(streamer.mode == .depth ? "DEPTH (LiDAR)" : "RGB (ultrawide)")
+                            .font(.title2.bold())
+                            .padding(.horizontal, 20).padding(.vertical, 18)
+                            .background(streamer.mode == .depth ? Color.blue : Color.gray.opacity(0.85))
+                            .foregroundStyle(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                    }
                     Button {
                         streamer.setExposureLocked(!streamer.exposureLocked)
                     } label: {

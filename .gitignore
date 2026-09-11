@@ -8,3 +8,4 @@ data/
 widecam/ios/build/
 widecam/ios/*.xcodeproj/xcuserdata/
 widecam/ios/WideCam.xcodeproj/project.xcworkspace/xcuserdata/
+.cache/

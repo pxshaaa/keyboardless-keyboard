@@ -68,7 +68,7 @@ def test_writer_emits_contract_schema_and_rows(tmp_path):
                 w.add_hand(i, 1000.0 + i, hand, label, x, x * 2, 0.93)
 
     table = pq.read_table(out)
-    assert table.schema.names == ["i", "t", "hand", "handedness", "joint", "x", "y", "conf"]
+    assert table.schema.names == ["i", "t", "hand", "handedness", "joint", "x", "y", "conf", "z", "wx", "wy", "wz"]
     assert table.schema == el.SCHEMA
     assert table.num_rows == 3 * 2 * 21  # up to 42 rows per frame
     d = table.to_pydict()
