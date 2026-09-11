@@ -1,0 +1,14 @@
+deskpix exit=139 attempt=1
+deskpix exit=139 attempt=2
+deskpix exit=139 attempt=3
+  desk finetune seed0 (42s)
+  desk finetune seed1 (36s)
+  desk finetune seed2 (34s)
+-> .cache/keypre/deskpix_finetune_3x40.npy (7176, 27) mean max prob 0.344
+  desk scratch seed0 (40s)
+  desk scratch seed1 (45s)
+  desk scratch seed2 (47s)
+
+[244.8s]
+-> .cache/keypre/deskpix_scratch_3x40.npy (7176, 27) mean max prob 0.380
+deskpix exit=0 attempt=1

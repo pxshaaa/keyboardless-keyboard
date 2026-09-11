@@ -1,0 +1,6 @@
+40 streams in taps/char (1.0, 3.6), grid 5x3x3
+/Users/pashaalidadi/Documents/misc/computer-vision-test/phase0/analysis/tap_pos.py:145: RuntimeWarning: Mean of empty slice
+  cols.append(np.nanmean(B[:, :, CH_CONF], axis=1)[:, None])
+
+[79.6s]
+verify: recomputed 9 rows with hirecall's own pixels; identical=True

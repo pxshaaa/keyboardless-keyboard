@@ -668,6 +668,7 @@ def self_train(session, ev, segs, tr, p, pick, st_w: float, seeds):
     conf = (q[fit_idx].max(1) >= 0.5) & (q_ins[fit_idx] < 0.5)
     if int(conf.sum()) < 100:
         return p
+    use_cpu(1)  # >1 OMP thread deadlocks in spawned workers holding both libomp copies
     X = chans(b, REPS["temporal"], "none", rows=rows)
     ps = []
     for s in seeds[:1]:  # one seed: 20 folds x a CPU fit is the whole budget
