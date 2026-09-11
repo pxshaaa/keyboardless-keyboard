@@ -9,10 +9,12 @@ final class MJPEGServer {
     private var listener: NWListener?
     private let queue = DispatchQueue(label: "widecam.server")
     private var clients: [ObjectIdentifier: StreamClient] = [:]
+    private var depthClients: [ObjectIdentifier: StreamClient] = [:]
     private let clientsLock = OSAllocatedUnfairLock()
     private var txt = ["v": "1", "w": "1280", "h": "720", "fps": "60"]
 
     var clientCount: Int { clientsLock.withLock { clients.count } }
+    var depthClientCount: Int { clientsLock.withLock { depthClients.count } }
 
     func start(streamer: CameraStreamer) {
         self.streamer = streamer
@@ -32,7 +34,7 @@ final class MJPEGServer {
             switch st {
             case .ready:
                 self.port = l.port?.rawValue ?? p
-                NSLog("[WideCam] listening on port \(self.port)")
+                NSLog("[WideCam] listening on port \(self.port) ips=\(ContentView.ipv4Addresses().joined(separator: ","))")
                 DispatchQueue.main.async { self.streamer?.port = self.port }
             case .failed(let e):
                 NSLog("[WideCam] listener failed: \(e)")
@@ -56,7 +58,16 @@ final class MJPEGServer {
     /// Called from the encode queue. Every stream client gets the latest frame; old unsent ones are replaced.
     func publish(_ f: Frame) {
         let cs = clientsLock.withLock { Array(clients.values) }
-        for c in cs { c.offer(f) }
+        let d = StreamClient.part(f)
+        for c in cs { c.offer(d) }
+    }
+
+    /// Called from the depth queue; same single-slot mailbox discipline as video.
+    func publishDepth(_ f: DepthFrame) {
+        let cs = clientsLock.withLock { Array(depthClients.values) }
+        guard !cs.isEmpty else { return }
+        let d = DepthPacker.part(f)
+        for c in cs { c.offer(d) }
     }
 
     // MARK: connections
@@ -101,10 +112,18 @@ final class MJPEGServer {
             clientsLock.withLock { clients[ObjectIdentifier(conn)] = client }
             client.send(Data(hdr.utf8))
             NSLog("[WideCam] stream client connected (\(clientCount))")
+        case ("GET", "/depth"):
+            let hdr = "HTTP/1.1 200 OK\r\nConnection: close\r\nCache-Control: no-cache\r\nPragma: no-cache\r\nContent-Type: multipart/x-mixed-replace; boundary=depth\r\n\r\n"
+            let client = StreamClient(conn: conn, queue: queue) { [weak self] in self?.remove(conn) }
+            clientsLock.withLock { depthClients[ObjectIdentifier(conn)] = client }
+            client.send(Data(hdr.utf8))
+            NSLog("[WideCam] depth client connected (\(depthClientCount))")
+        case ("GET", "/devices"):
+            respondJSON(conn, DepthProbe.report())
         case ("GET", "/status"):
             respondJSON(conn, streamer?.statusJSON() ?? "{}")
         case ("POST", "/control"), ("GET", "/control"):
-            var exposure: String?, fps: Double?, preset: String?, quality: Double?
+            var exposure: String?, fps: Double?, preset: String?, quality: Double?, mode: String?, filter: String?, dev: String?
             for kv in query.split(separator: "&") {
                 let p = kv.split(separator: "=", maxSplits: 1).map { String($0).removingPercentEncoding ?? String($0) }
                 guard p.count == 2 else { continue }
@@ -113,10 +132,14 @@ final class MJPEGServer {
                 case "fps": fps = Double(p[1])
                 case "preset": preset = p[1]
                 case "quality": quality = Double(p[1])
+                case "mode": mode = p[1]
+                case "filter": filter = p[1]
+                case "device": dev = p[1]
                 default: break
                 }
             }
-            streamer?.applyControl(exposure: exposure, fps: fps, preset: preset, quality: quality)
+            streamer?.applyControl(exposure: exposure, fps: fps, preset: preset, quality: quality,
+                                   mode: mode, filter: filter, device: dev)
             respondJSON(conn, streamer?.statusJSON() ?? "{}")
         default:
             respond(conn, status: "404 Not Found", body: "not found")
@@ -136,8 +159,10 @@ final class MJPEGServer {
     }
 
     private func remove(_ conn: NWConnection) {
-        let removed = clientsLock.withLock { clients.removeValue(forKey: ObjectIdentifier(conn)) }
-        if removed != nil { NSLog("[WideCam] stream client gone (\(clientCount))") }
+        let removed = clientsLock.withLock {
+            clients.removeValue(forKey: ObjectIdentifier(conn)) ?? depthClients.removeValue(forKey: ObjectIdentifier(conn))
+        }
+        if removed != nil { NSLog("[WideCam] client gone (stream=\(clientCount) depth=\(depthClientCount))") }
     }
 }
 
@@ -146,7 +171,7 @@ final class StreamClient {
     private let conn: NWConnection
     private let queue: DispatchQueue
     private let onError: () -> Void
-    private var pending: Frame?
+    private var pending: Data?
     private var sending = false
     private var dead = false
 
@@ -154,10 +179,10 @@ final class StreamClient {
         self.conn = conn; self.queue = queue; self.onError = onError
     }
 
-    func offer(_ f: Frame) {
+    func offer(_ d: Data) {
         queue.async { [self] in
             guard !dead else { return }
-            pending = f          // replace, never queue
+            pending = d          // replace, never queue
             pump()
         }
     }
@@ -170,10 +195,10 @@ final class StreamClient {
     }
 
     private func pump() {
-        guard !sending, let f = pending else { return }
+        guard !sending, let d = pending else { return }
         pending = nil
         sending = true
-        conn.send(content: Self.part(f), completion: .contentProcessed { [self] e in self.done(e) })
+        conn.send(content: d, completion: .contentProcessed { [self] e in self.done(e) })
     }
 
     private func done(_ e: NWError?) {

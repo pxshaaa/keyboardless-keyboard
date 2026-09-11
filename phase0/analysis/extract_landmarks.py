@@ -63,6 +63,10 @@ SCHEMA = pa.schema(
         pa.field("x", pa.float32()),
         pa.field("y", pa.float32()),
         pa.field("conf", pa.float32()),
+        pa.field("z", pa.float32()),   # MediaPipe image-space depth, same scale as x (px), wrist = 0
+        pa.field("wx", pa.float32()),  # metric world landmarks (m), origin at hand geometric centre
+        pa.field("wy", pa.float32()),
+        pa.field("wz", pa.float32()),
     ]
 )
 
@@ -176,6 +180,10 @@ class LandmarkBatchWriter:
         self._x: list[float] = []
         self._y: list[float] = []
         self._conf: list[float] = []
+        self._z: list[float] = []
+        self._wx: list[float] = []
+        self._wy: list[float] = []
+        self._wz: list[float] = []
 
     def add_hand(
         self,
@@ -186,6 +194,8 @@ class LandmarkBatchWriter:
         x_px: np.ndarray,
         y_px: np.ndarray,
         conf: float,
+        z_px: np.ndarray | None = None,
+        w: np.ndarray | None = None,
     ) -> None:
         n = len(x_px)
         self._i.extend([i] * n)
@@ -198,6 +208,12 @@ class LandmarkBatchWriter:
         # Hand-level handedness score replicated across all 21 joints; see the
         # module docstring -- MediaPipe exposes no per-landmark confidence.
         self._conf.extend([conf] * n)
+        if z_px is None:
+            z_px = np.full(n, np.nan, np.float32)
+        if w is None:
+            w = np.full((n, 3), np.nan, np.float32)
+        self._z.extend(z_px.tolist())
+        self._wx.extend(w[:, 0].tolist()); self._wy.extend(w[:, 1].tolist()); self._wz.extend(w[:, 2].tolist())
         if len(self._i) >= self.batch_rows:
             self.flush()
 
@@ -214,6 +230,10 @@ class LandmarkBatchWriter:
                 pa.array(self._x, type=pa.float32()),
                 pa.array(self._y, type=pa.float32()),
                 pa.array(self._conf, type=pa.float32()),
+                pa.array(self._z, type=pa.float32()),
+                pa.array(self._wx, type=pa.float32()),
+                pa.array(self._wy, type=pa.float32()),
+                pa.array(self._wz, type=pa.float32()),
             ],
             schema=SCHEMA,
         )
@@ -333,7 +353,11 @@ def extract(
                     label = cats[0].category_name if cats else "Unknown"
                     score = float(cats[0].score) if cats else float("nan")
                     x_px, y_px = normalized_to_pixels(hand_lms, width, height)
-                    writer.add_hand(row.i, row.t, hand_idx, label, x_px, y_px, score)
+                    z_px = np.array([lm.z for lm in hand_lms], dtype=np.float32) * width
+                    wl = (result.hand_world_landmarks or [])
+                    w = (np.array([[q.x, q.y, q.z] for q in wl[hand_idx]], dtype=np.float32)
+                         if hand_idx < len(wl) else np.full((len(hand_lms), 3), np.nan, np.float32))
+                    writer.add_hand(row.i, row.t, hand_idx, label, x_px, y_px, score, z_px, w)
                     n_hands += 1
 
                 n_processed += 1

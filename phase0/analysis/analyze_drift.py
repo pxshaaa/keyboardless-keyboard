@@ -32,16 +32,22 @@ MIN_QUALIFYING_KEYS = 8
 HOME_ROW_ADJACENT = [("a", "s"), ("s", "d"), ("d", "f"), ("j", "k"), ("k", "l")]
 FINGER_NAMES = {4: "thumb", 8: "index", 12: "middle", 16: "ring", 20: "pinky"}
 THUMB_JOINT = 4
+N_KEYS = 27  # a-z plus space
 MODIFIERS = {"shift", "ctrl", "alt", "cmd", "esc"}
 
-# alignment weights: rank-position mismatch dominates, thumb/space agreement is the
-# only real observational signal available on a bare desk.
+# alignment weights: rank-position mismatch dominates; the observational term is tap_pos's
+# key distribution where it exists, otherwise the far weaker thumb/space flag.
 W_RANK = 4.0
 W_THUMB = 2.0  # spaces are thumb taps and act as anchors, so disagreeing must be expensive
-GAP_DELETE = 0.5  # a typed character with no detected tap
-GAP_INSERT = 0.5  # a detected tap with no character
+W_KEY = 2.0  # same role as W_THUMB, but graded over all 27 keys when the taps carry key_probs
+KEY_FLOOR = 1e-4
+SPACE_P = 0.5
+# Must exceed the worst observational disagreement or the DP deletes rather than aligns; see CONTRACT amendment 3.
+GAP_DELETE = 1.5  # a typed character with no detected tap
+GAP_INSERT = 1.5  # a detected tap with no character
 MIN_FRAC_CONFIDENT = 0.50  # damaged words are already withheld one by one; this drops whole phrases
-MAX_NORM_COST = 0.60
+MAX_NORM_COST_GAPS = 1.2  # in units of GAP_DELETE, so the gate survives changes to the gap cost
+MAX_NORM_COST = MAX_NORM_COST_GAPS * GAP_DELETE
 TAP_COUNT_RATIO_RANGE = (0.60, 1.60)
 
 # Fallback pitch: 19 mm Apple pitch at the contract's oblique framing is ~55 px at
@@ -90,15 +96,16 @@ class Session:
         return max(ts) - min(ts) if ts else 0.0
 
 
-def load_session(session_dir: Path, condition: str) -> Session:
+def load_session(session_dir: Path, condition: str, taps_name: str = "taps.jsonl") -> Session:
     if not session_dir.is_dir():
         raise AnalysisError(f"session dir does not exist: {session_dir}")
-    taps = read_jsonl(session_dir / "taps.jsonl")
+    taps_path = session_dir / taps_name
+    taps = read_jsonl(taps_path)
     if not taps:
-        raise AnalysisError(f"{session_dir/'taps.jsonl'}: no taps - run detect_taps first")
+        raise AnalysisError(f"{taps_path}: no taps - run detect_taps first")
     for f in ("t", "x", "y", "finger"):
         if f not in taps[0]:
-            raise AnalysisError(f"{session_dir/'taps.jsonl'}: rows lack required field {f!r}")
+            raise AnalysisError(f"{taps_path}: rows lack required field {f!r}")
 
     keys = [r for r in read_jsonl(session_dir / "keys.jsonl", required=(condition == "kbd")) if r.get("event") == "down"]
     if condition == "kbd" and not keys:
@@ -228,22 +235,42 @@ def normalize_char(ch: str) -> str | None:
     return None
 
 
+def tap_key_probs(taps: Sequence[dict]) -> list[dict] | None:
+    """Per-tap P(key) from tap_pos's key_probs, keyed like normalize_char; None if absent."""
+    if not any(t.get("key_probs") for t in taps):
+        return None
+    out = []
+    for t in taps:
+        kp = t.get("key_probs") or {}
+        d = {(normalize_char(k) or "space"): float(v) for k, v in kp.items()}
+        # top-k truncation: the unlisted tail is spread evenly, not treated as impossible
+        d["__tail__"] = max((1.0 - sum(d.values())) / max(1, N_KEYS - len(d)), KEY_FLOOR)
+        out.append(d)
+    return out
+
+
 def align_phrase(chars: Sequence[str], taps: Sequence[dict]) -> Alignment:
     """Monotonic Needleman-Wunsch of typed characters onto detected taps; cost is rank-position
-    disagreement plus thumb/space agreement, gaps model missed and hallucinated taps (no 1:1)."""
+    disagreement plus key agreement, gaps model missed and hallucinated taps (no 1:1)."""
     n, m = len(chars), len(taps)
     if n == 0 or m == 0:
         return Alignment([], float(n) * GAP_DELETE + float(m) * GAP_INSERT, float("inf"), 0.0, n, m)
 
-    # tap position is normalized ELAPSED TIME, not rank: a missed tap then leaves a real gap,
-    # which is what tells the alignment which character was dropped.
+    # Rank, not elapsed time: elapsed time assumes a uniform typing rate (worse on kbd ground truth).
     pos_c = np.linspace(0.0, 1.0, n) if n > 1 else np.zeros(1)
-    ts = np.array([t["t"] for t in taps], dtype=float)
-    span = float(ts[-1] - ts[0])
-    pos_t = (ts - ts[0]) / span if span > 1e-9 else (np.linspace(0.0, 1.0, m) if m > 1 else np.zeros(1))
+    pos_t = np.linspace(0.0, 1.0, m) if m > 1 else np.zeros(1)
     is_space = np.array([c == "space" for c in chars])
     is_thumb = np.array([int(t.get("finger", 0)) == THUMB_JOINT for t in taps])
-    match = W_RANK * np.abs(pos_c[:, None] - pos_t[None, :]) + W_THUMB * (is_space[:, None] != is_thumb[None, :])
+    kp = tap_key_probs(taps)
+    if kp is None:
+        is_space_tap = is_thumb
+        obs = W_THUMB * (is_space[:, None] != is_thumb[None, :])
+    else:
+        is_space_tap = np.array([d.get("space", d["__tail__"]) >= SPACE_P for d in kp])
+        p = np.array([[max(d.get(c, d["__tail__"]), KEY_FLOOR) for d in kp] for c in chars])
+        obs = W_KEY * np.clip(-np.log(p) / math.log(N_KEYS), 0.0, 1.0)
+        obs = obs - obs.min(axis=0, keepdims=True)  # a tap on its own best key costs 0, like an agreeing thumb
+    match = W_RANK * np.abs(pos_c[:, None] - pos_t[None, :]) + obs
 
     D = np.empty((n + 1, m + 1))
     D[0, :] = np.arange(m + 1) * GAP_INSERT
@@ -270,7 +297,7 @@ def align_phrase(chars: Sequence[str], taps: Sequence[dict]) -> Alignment:
         else:
             j -= 1
     raw.reverse()
-    matches = _mark_confident(raw, is_space, is_thumb, n, m)
+    matches = _mark_confident(raw, is_space, is_space_tap, n, m)
     total = float(D[n, m])
     n_conf = sum(1 for mm in matches if mm[3])
     return Alignment(matches, total, total / n, n_conf / n, n, m)
@@ -521,9 +548,10 @@ def write_plot(path: Path, kbd_pts, desk_pts, keys: list[str], meta: dict) -> st
 
 
 # --- main -----------------------------------------------------------------
-def analyze(kbd_dir: Path, desk_dir: Path) -> dict:
-    kbd = load_session(kbd_dir, "kbd")
-    desk = load_session(desk_dir, "desk")
+def analyze(kbd_dir: Path, desk_dir: Path, kbd_taps: str = "taps.jsonl",
+            desk_taps: str = "taps.jsonl") -> dict:
+    kbd = load_session(kbd_dir, "kbd", kbd_taps)
+    desk = load_session(desk_dir, "desk", desk_taps)
     label_session(kbd)
     label_session(desk)
 
@@ -781,9 +809,12 @@ def main(argv: Iterable[str] | None = None) -> int:
     ap.add_argument("--kbd", required=True, type=Path)
     ap.add_argument("--desk", required=True, type=Path)
     ap.add_argument("--no-plot", action="store_true")
+    ap.add_argument("--kbd-taps", default="taps.jsonl")
+    ap.add_argument("--desk-taps", default="taps.jsonl",
+                    help="e.g. taps_pos.jsonl, which carries tap_pos's corrected finger/hand")
     args = ap.parse_args(list(argv) if argv is not None else None)
     try:
-        res = analyze(args.kbd, args.desk)
+        res = analyze(args.kbd, args.desk, args.kbd_taps, args.desk_taps)
     except AnalysisError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         print("Refusing to produce a verdict from unusable input.", file=sys.stderr)

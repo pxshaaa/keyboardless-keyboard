@@ -144,9 +144,12 @@ From the repo root, with the venv:
 .venv/bin/python -m phase0.capture.recorder --list-cameras
 
 # 1. record both sessions (10 min each, phone untouched in between)
-.venv/bin/python -m phase0.capture.recorder --condition kbd  --camera iPhone --seconds 600
-.venv/bin/python -m phase0.capture.recorder --condition desk --camera iPhone --seconds 600 \
-      --phrases phase0/phrases.txt
+#    --backend net + WideCam on the phone gives the true ultra-wide at 60 fps;
+#    --camera auto finds it over Bonjour, or pass the IP the app prints on screen.
+.venv/bin/python -m phase0.capture.recorder --condition kbd --backend net --camera auto \
+      --width 1280 --height 720 --fps 60 --seconds 600
+.venv/bin/python -m phase0.capture.recorder --condition desk --backend net --camera auto \
+      --width 1280 --height 720 --fps 60 --seconds 600 --phrases phase0/phrases.txt
 
 # 2. note the two session ids it printed, e.g.
 KBD=data/sessions/20260910-101500-kbd
@@ -156,12 +159,26 @@ DESK=data/sessions/20260910-103000-desk
 .venv/bin/python -m phase0.analysis.extract_landmarks "$KBD"
 .venv/bin/python -m phase0.analysis.extract_landmarks "$DESK"
 
-# 4. taps
-.venv/bin/python -m phase0.analysis.detect_taps "$KBD"
-.venv/bin/python -m phase0.analysis.detect_taps "$DESK"
+# 4. taps -- uses the trained model (F1 76.3% held-out) and writes taps.jsonl
+.venv/bin/python -m phase0.analysis.detect "$KBD"
+.venv/bin/python -m phase0.analysis.detect "$DESK"
 
 # 5. the verdict
 .venv/bin/python -m phase0.analysis.analyze_drift --kbd "$KBD" --desk "$DESK"
+```
+
+If you record more keyboard sessions, retrain before step 4 — every doubling of labelled
+keypresses has bought 7-13 F1 points so far, and the curve has not flattened:
+
+```bash
+.venv/bin/python -m phase0.analysis.taps_gb train --sessions data/sessions/*-kbd
+```
+
+To check a detector against ground truth on any *keyboard* session (the desk session has no
+keystrokes to check against):
+
+```bash
+.venv/bin/python -m phase0.analysis.eval_taps "$KBD" --clip
 ```
 
 Step 5 prints the verdict, and writes `drift_report.md` and `drift_scatter.png` into the desk

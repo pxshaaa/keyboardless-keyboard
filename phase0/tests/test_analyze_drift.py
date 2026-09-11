@@ -2,6 +2,7 @@ import math
 
 import pytest
 
+from phase0.analysis import analyze_drift as ad
 from phase0.analysis.analyze_drift import (
     FALLBACK_PITCH_PX_DEFAULT,
     KeyStats,
@@ -194,3 +195,87 @@ def test_normalize_char():
     assert normalize_char("A") == "a"
     assert normalize_char("7") == "7"
     assert normalize_char(",") is None
+
+
+# --- key_probs-aware alignment (tap_pos) ----------------------------------
+def taps_kp(chars, drop=(), confuse=()):
+    """One tap per character carrying tap_pos-style key_probs; `confuse` mislabels a tap."""
+    taps = []
+    for i, c in enumerate(chars):
+        if i in drop:
+            continue
+        ch = " " if c == "space" else c
+        top = "z" if i in confuse else ch
+        taps.append({"t": 100.0 + 0.2 * i, "x": 10.0 * i, "y": 500.0,
+                     "finger": 4 if c == "space" else 8, "hand": 0,
+                     "key_probs": {top: 0.9, "q": 0.05}})
+    return taps
+
+
+def test_tap_key_probs_returns_none_without_key_probs():
+    chars = chars_of("the quick brown fox")
+    assert ad.tap_key_probs(taps_for(chars)) is None
+    d = ad.tap_key_probs(taps_kp(chars))[0]
+    assert d["t"] == pytest.approx(0.9)
+    assert d["__tail__"] > 0.0
+
+
+def test_key_probs_alignment_is_one_to_one_on_a_clean_phrase():
+    chars = chars_of("the quick brown fox")
+    al = align_phrase(chars, taps_kp(chars))
+    assert [t for _c, t, _cost, _ok in al.matches] == list(range(len(chars)))
+    assert al.frac_confident == 1.0
+
+
+def test_key_probs_beat_the_thumb_rule_when_fingers_are_wrong():
+    """tap_pos's key distribution should carry the alignment even if `finger` is useless."""
+    chars = chars_of("the quick brown fox")
+    kp = taps_kp(chars)
+    for t in kp:
+        t["finger"] = 8  # no thumb anywhere, so the space anchors must come from key_probs
+    blind = [{k: v for k, v in t.items() if k != "key_probs"} for t in kp]
+    assert align_phrase(chars, kp).frac_confident > align_phrase(chars, blind).frac_confident
+
+
+def test_key_probs_alignment_survives_a_mislabelled_tap():
+    chars = chars_of("the quick brown fox")
+    al = align_phrase(chars, taps_kp(chars, confuse=(5,)))
+    assert len(al.matches) == len(chars)
+
+
+# --- deletion tolerance (CONTRACT amendment 3) ----------------------------
+def test_a_missed_tap_does_not_wipe_out_the_untouched_words():
+    """The old gap costs made every imperfect match lose to delete+insert, so a phrase with
+    one missed tap ended up confident on its spaces only."""
+    chars = chars_of("the quick brown fox jumps over the lazy dog")
+    al = align_phrase(chars, taps_kp(chars, drop=(5,)))
+    conf_nonspace = [c for c, _t, _cost, ok in al.matches if ok and chars[c] != "space"]
+    assert len(conf_nonspace) > 0.5 * sum(1 for c in chars if c != "space")
+
+
+def test_gaps_cost_more_than_a_positionally_right_but_key_wrong_match():
+    """Otherwise the DP deletes any character whose key evidence disagrees, rather than
+    aligning it - which is what left the confident set almost entirely spaces."""
+    assert ad.GAP_DELETE + ad.GAP_INSERT > max(ad.W_KEY, ad.W_THUMB)
+
+
+def test_cost_gate_is_expressed_in_gap_units():
+    assert ad.MAX_NORM_COST == pytest.approx(ad.MAX_NORM_COST_GAPS * ad.GAP_DELETE)
+
+
+def test_uneven_typing_rhythm_does_not_read_as_a_missing_tap():
+    """Positions are rank, not elapsed time: pausing mid-phrase must not shift the alignment."""
+    chars = chars_of("the quick brown fox")
+    taps = taps_kp(chars)
+    for t in taps[10:]:
+        t["t"] += 3.0  # a three-second pause after the tenth character
+    al = align_phrase(chars, taps)
+    assert [t for _c, t, _cost, _ok in al.matches] == list(range(len(chars)))
+    assert al.frac_confident == 1.0
+
+
+def test_pass_thresholds_are_frozen():
+    """CONTRACT: these four decide Phase 0 and are never tuned against a session's outcome."""
+    assert (ad.SHIFT_THRESHOLD_PITCH, ad.VAR_RATIO_THRESHOLD) == (0.5, 2.0)
+    assert (ad.MIN_QUALIFYING_KEYS, ad.MIN_SAMPLES_PER_KEY) == (8, 15)
+    assert ad.MIN_FRAC_CONFIDENT == 0.50
