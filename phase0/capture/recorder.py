@@ -328,7 +328,7 @@ def _permission_watchdog(rec: Recorder, grace: float = 10.0) -> None:
     while time.monotonic() < end:
         if rec.stop.wait(0.25):
             return
-    if rec.keys_jsonl.count == 0 and rec.frames_written > 0:
+    if rec.keys_jsonl.count == 0 and rec.frames_written > 0 and rec.args.condition != "pad":
         print(
             "\n" + "!" * 72 + "\n"
             "!!  NO KEY EVENTS after 10s while frames ARE arriving.\n"
@@ -337,6 +337,21 @@ def _permission_watchdog(rec: Recorder, grace: float = 10.0) -> None:
             "!!    System Settings > Privacy & Security > Input Monitoring\n"
             "!!    (also check Accessibility), then RESTART the terminal.\n"
             "!!  Recording continues, but keys.jsonl will be empty.\n" + "!" * 72 + "\n",
+            file=sys.stderr,
+            flush=True,
+        )
+
+
+def _touchpad_watchdog(rec: "Recorder", logger, grace: float = 20.0) -> None:
+    """A pad session with no trackpad frames has no labels; say so while it can still be fixed."""
+    end = time.monotonic() + grace
+    while time.monotonic() < end:
+        if rec.stop.wait(0.25):
+            return
+    if logger.frames == 0 and rec.frames_written > 0:
+        print(
+            "\n" + "!" * 72 + "\n!!  NO TRACKPAD CONTACTS after 20s. Tap the trackpad glass to check;\n"
+            "!!  touches.jsonl stays empty until a finger touches the pad.\n" + "!" * 72 + "\n",
             file=sys.stderr,
             flush=True,
         )
@@ -437,6 +452,31 @@ def record(args: argparse.Namespace) -> int:
         print("ERROR: could not open VideoWriter with 'avc1' (H.264).", file=sys.stderr)
         return 3
 
+    touch_logger = None
+    touches_jsonl: Optional[JsonlWriter] = None
+    touch_info: dict[str, Any] = {}
+    if args.condition == "pad" and not getattr(args, "touchpad", False):
+        print("[recorder] --condition pad implies --touchpad", flush=True)
+        args.touchpad = True
+    if getattr(args, "touchpad", False):
+        from phase0.capture.touchpad import TouchpadError, TouchpadLogger
+
+        touches_jsonl = JsonlWriter(session_dir / "touches.jsonl", flush_every=10)
+        touch_logger = TouchpadLogger(touches_jsonl)
+        try:
+            touch_info = touch_logger.start()
+        except TouchpadError as exc:
+            touches_jsonl.close()
+            cap.release()
+            writer.release()
+            print(f"ERROR: --touchpad could not start the built-in trackpad: {exc}", file=sys.stderr)
+            return 5
+        print(
+            f"[recorder] trackpad {touch_info['width_mm']}x{touch_info['height_mm']} mm "
+            "-> touches.jsonl (disable Tap to click)",
+            flush=True,
+        )
+
     rec = Recorder(session_dir, args)
     t0 = time.monotonic()
     print(
@@ -467,6 +507,8 @@ def record(args: argparse.Namespace) -> int:
     wt = threading.Thread(target=rec.writer_loop, args=(writer,), daemon=True)
     wt.start()
     threading.Thread(target=_permission_watchdog, args=(rec,), daemon=True).start()
+    if touch_logger is not None:
+        threading.Thread(target=_touchpad_watchdog, args=(rec, touch_logger), daemon=True).start()
     pt: Optional[threading.Thread] = None
     if prompter is not None:
         pt = threading.Thread(target=prompter.run, daemon=True)
@@ -485,6 +527,8 @@ def record(args: argparse.Namespace) -> int:
         # Let the prompter close its in-flight phrase window before we close the file.
         if pt is not None:
             pt.join(timeout=5)
+        if touch_logger is not None:
+            touch_info = touch_logger.stop()
         rec.q.put(None)
         wt.join(timeout=30)
         cap.release()
@@ -516,9 +560,13 @@ def record(args: argparse.Namespace) -> int:
                 f"driver_fps_claimed={fps_claimed:.3f}; frames_dropped="
                 f"{rec.frames_dropped}; requested={args.width}x{args.height}; "
                 f"keys_logged={rec.keys_jsonl.count}; phrases_shown="
-                f"{prompter.completed if prompter else 0}; {args.notes}"
+                f"{prompter.completed if prompter else 0}; "
+                + (f"touches_down={touch_info.get('downs', 0)}; " if touch_logger else "")
+                + f"{args.notes}"
             ).strip(),
         }
+        if touch_logger is not None:
+            meta["touchpad"] = touch_info
         (session_dir / "meta.json").write_text(
             json.dumps(meta, indent=2) + "\n", encoding="utf-8"
         )
@@ -526,18 +574,24 @@ def record(args: argparse.Namespace) -> int:
         rec.keys_jsonl.close()
         if phrases_jsonl is not None:
             phrases_jsonl.close()
+        if touches_jsonl is not None:
+            touches_jsonl.close()
 
         print(
             "\n[recorder] done\n"
             f"  frames written : {rec.frames_written} (dropped {rec.frames_dropped})\n"
             f"  keys logged    : {rec.keys_jsonl.count}\n"
             f"  phrases done   : {prompter.completed if prompter else 0}\n"
+            + (f"  trackpad       : {touch_info.get('downs', 0)} contacts, "
+               f"{touch_info.get('frames_dropped', 0)} frames dropped, "
+               f"clock={touch_info.get('clock_mode')}\n" if touch_logger else "")
+            +
             f"  measured fps   : {fps_actual:.2f} over {span:.1f}s\n"
             f"  resolution     : {width}x{height}\n"
             f"  output dir     : {session_dir}",
             flush=True,
         )
-        if rec.keys_jsonl.count == 0:
+        if rec.keys_jsonl.count == 0 and args.condition != "pad":
             print(
                 "  WARNING: zero key events -- check Input Monitoring permission.",
                 flush=True,
@@ -551,7 +605,12 @@ def build_parser() -> argparse.ArgumentParser:
         description="Record a Phase 0 session: camera video + keystrokes on one "
         "time.monotonic() clock.",
     )
-    p.add_argument("--condition", required=True, choices=["kbd", "desk"])
+    p.add_argument("--condition", required=True, choices=["kbd", "desk", "pad"])
+    p.add_argument(
+        "--touchpad",
+        action="store_true",
+        help="also log built-in trackpad contacts to touches.jsonl (implied by --condition pad)",
+    )
     p.add_argument(
         "--camera",
         default="0",

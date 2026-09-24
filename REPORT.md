@@ -577,3 +577,18 @@ Rerun of the from-scratch key-ID table with it as a 4th training session (`KEYPR
 | run 5, 100% | 3,147 | **0.657** | [0.589, 0.723] |
 
 +1.9 points held-out; within noise on its own, but the in-run curve still climbs ~6.6–7.4 points per doubling (no flattening yet). 4-session LOSO 0.588 (not comparable to the old 3-session 0.495: different folds).
+
+## 2026-09-12: four-way experiment round + the tap-free breakthrough
+
+Full write-ups in `results/<name>/SUMMARY.md`. One user, one rig; desk numbers on session 20260910-202149-desk (20 phrases, paired phrase bootstrap CIs).
+
+| Track | Result | Verdict |
+|---|---|---|
+| `autocorrect` — decoder ceiling by simulation | With perfect taps a Qwen word-level decoder gives 92% words at 70% keys; with desk tap errors (20% missed, 1.3 extra/char) no decoder exceeds 50% words even at 95% keys | tap detection is the gate for any per-tap pipeline |
+| `contact` — press vs hover | Only a fingertip-crop contact CNN helps (desk CER 0.421→0.397, borderline). EgoPressure: pressed vs hover separable from overhead 2D at AUC 0.61, 0.92 only with true fingertip height | overhead 2D barely encodes contact — physically limited |
+| `normalize` — camera/session robustness | label-free `tap_g` frame: cross-day key ID 0.534→0.698, LOSO 0.582→0.713; self-training/enrolment add ~0; desk CER unchanged; hand size ±15% is the cross-user weak spot | keep for key ID; doesn't move desk |
+| `robustdec` — tap-noise-aware word decoder | real desk CER 0.441 (beam 0.448), words 40% vs 32%, CIs include zero | dead end vs seqctc |
+| **`seqctc` — landmarks→text CTC, no tap detection** | How-We-Type-pretrained, trained on keyboard sessions: desk CER **0.234** zero-shot; +5-fold desk-phrase fine-tuning **0.132** | **beats the pipeline by a wide margin** |
+| **`seqctc2` — + Qwen word decoder** (tuned on keyboard windows only) | desk fine-tuned **CER 0.094, WER 0.151 (~85% words)**; continuous stream with pause segmentation CER 0.106 / WER 0.168; zero-shot WER 0.477 | **meets the 80–90% words goal on this session** |
+
+Caveats: the 20 desk phrases have been looked at by many experiments → confirm on a fresh desk session (`phase0/phrases_desk2.txt`, models frozen); closed 31k English vocabulary (the user's normal typing includes German); How We Type is CC-BY-NC (research only); leakage audit clean (no desk phrase in any training text; folds split by phrase).

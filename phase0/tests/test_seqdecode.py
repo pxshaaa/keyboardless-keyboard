@@ -7,6 +7,9 @@ from phase0.analysis.decode import ALPHABET, A_INDEX, NA, Weights
 from phase0.analysis import seqdecode as sd
 
 
+needs_data = pytest.mark.skipif(not sd.sess_path(sd.HELDOUT_SESSION).exists(), reason="private recordings not present")
+
+
 def test_char_class_map_covers_alphabet():
     assert (sd.CHAR_CLS >= 0).all()
     assert sd.CHAR_CLS[A_INDEX[" "]] == sd.THUMB
@@ -85,6 +88,7 @@ def test_per_tap_scores_counts_uncovered_as_error():
     assert r["key"] == 0.5 and r["key_cov"] == 1.0
 
 
+@needs_data
 def test_finger_oracle_only_penalises_the_wrong_classes():
     s = sd.sess_path(sd.HELDOUT_SESSION)
     o = sd.FingerOracle(s, "taps_pos.jsonl")
@@ -94,6 +98,7 @@ def test_finger_oracle_only_penalises_the_wrong_classes():
     assert (b <= 0).all() and (b == 0).any(1).all()
 
 
+@needs_data
 def test_timing_power_beats_the_kind_prior():
     ms = sd.fit_motor(list(sd.TRAIN_SESSIONS))
     tp = sd.timing_power(ms, list(sd.TRAIN_SESSIONS))
@@ -102,6 +107,7 @@ def test_timing_power_beats_the_kind_prior():
     assert 0.0 < tp["info_nats"] < 0.2 * tp["H_prior_nats"]
 
 
+@needs_data
 def test_fit_motor_on_a_real_session_is_ordered():
     ms = sd.fit_motor(list(sd.TRAIN_SESSIONS))
     assert ms.counts["pairs"] > 1000

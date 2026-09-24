@@ -1,0 +1,48 @@
+# Pad session (PAD_PROTOCOL.md). One line per prompt; CALIB/DRILL/NEG prefixes are parsed by pad_labels.
+CALIB right index: press and hold 1 s on each glass corner: far-left, far-right, near-right, near-left
+the meeting moved to tuesday afternoon
+i will send the report later today
+can you let me know if this works
+we should talk about this in person
+the weather has been nice all week
+thanks for getting back to me
+i think we need a different approach
+let me know if you have questions
+the new version is ready on friday
+that is not the best way to do it
+please review the attached document
+we had a long talk about the project
+it took longer than i expected
+looking forward to hearing from you
+that sounds like a reasonable plan
+DRILL left index: 10 steady taps, lift fully between taps
+DRILL right index: 10 steady taps, lift fully between taps
+DRILL left middle, ring, pinky: 4 taps each
+DRILL right middle, ring, pinky: 4 taps each
+DRILL thumbs: alternate left and right thumb, 10 taps, like space
+DRILL double taps: same finger twice fast (ll ee ss oo tt), all fingers
+DRILL rolls: pinky-ring-middle-index on the glass, both hands, 5 times
+DRILL slow: one tap per second, any fingers, count them
+DRILL fast burst: both index fingers as fast as you can
+DRILL soft: the lightest taps you can still feel
+NEG hover: fingers move 5 mm above the glass, do not touch
+NEG twitch: fingers above the glass, twitch as if typing, never touch
+NEG rest: lay all fingertips on the glass and hold still
+NEG slide: slide one fingertip slowly around the glass
+NEG hands off: lift both hands out of frame, then back to hover
+NEG hover then tap: hover 2 s, one tap, hover 2 s, one tap
+happy to help with anything you need
+the team agreed on the new timeline
+i have added a few notes for you
+we can pick this up again tomorrow
+everything is on track for now
+the quick brown fox jumps over the lazy dog
+pack my box with five dozen liquor jugs
+how vexingly quick daft zebras jump
+the five boxing wizards jump quickly
+sphinx of black quartz judge my vow
+we promptly judged antique ivory buckles
+jackdaws love my big sphinx of quartz
+crazy fredrick bought many very exquisite opal jewels
+we all agreed that the weather looked much better today
+she sells sea shells by the sea shore every summer
