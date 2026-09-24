@@ -20,7 +20,7 @@ OUT = HWT / "streams"
 FINGERS = ("T", "I", "M", "R", "L")
 MP_MARKERS = [None] + [f"{f}{k}" for f in FINGERS for k in (1, 2, 3, 4)]  # joint 0 = mean(Win, Wout)
 MODS = {"Shift_L", "Shift_R", "Control_L", "Control_R", "Alt_L", "Alt_R", "Multi_key", "ISO_Level3_Shift"}
-SWAP = {"y": "z", "z": "y"}  # Finnish QWERTY -> the user's QWERTZ by physical key position
+SWAP = {"y": "z", "z": "y"}  # Finnish QWERTY -> German QWERTZ by physical key position
 
 
 def key_sym(k: str) -> int | None:

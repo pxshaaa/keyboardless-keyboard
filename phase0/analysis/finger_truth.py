@@ -2,7 +2,7 @@
 Per session: key location (image px, camera fixed within a session) and pressing finger are estimated jointly by EM
 (E: tip nearest the key centroid at the keydown frame, M: per-key median of the assigned tips). Two inits (touch-typing
 finger; label-free argmax flexion velocity) must converge to the same answer. Independent check: location-free motion
-signals (tip depth drop / flexion / stop) ranked among the 10 tips. Consistency of the user's finger-per-key mapping.
+signals (tip depth drop / flexion / stop) ranked among the 10 tips. Consistency of the typist's finger-per-key mapping.
   PYTHONPATH=. .venv/bin/python -m phase0.analysis.finger_truth {truth|crops}"""
 from __future__ import annotations
 

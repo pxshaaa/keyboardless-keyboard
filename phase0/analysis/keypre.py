@@ -32,7 +32,7 @@ SEEDS = (0, 1, 2)
 MIN_N = 12
 THREADS = 4
 
-# US MacBook legends vs the user's German QWERTZ: y and z sit at each other's physical position
+# US MacBook legends vs a German QWERTZ: y and z sit at each other's physical position
 PHYS_SWAP = {"y": "z", "z": "y"}
 # our detector tap coincides with keydown (median -2 ms); contact is 4 frames later at 60 fps
 CONTACT_S = 4 / 60.0
@@ -289,7 +289,7 @@ def train_sids(held: str) -> list[str]:
 
 
 def subset(n: int, frac: float, seed: int, sid: str) -> np.ndarray:
-    """One contiguous window per session: the user simply recorded for less time."""
+    """One contiguous window per session: that session simply ran shorter."""
     if frac >= 1.0:
         return np.arange(n)
     m = max(1, int(round(frac * n)))
@@ -765,7 +765,7 @@ def cmd_keys(a) -> int:
                   f"{_cell(r['held1']):>14}{_cell(r['held5']):>14}{f'[{lo:.3f},{hi:.3f}]':>16}"
                   f"{dl:>28}", flush=True)
             out["rows"].append(row)
-    print(f"\nwhat the public data is worth, in the user's recording time ({rate:.0f} labelled "
+    print(f"\nwhat the public data is worth, in own recording time ({rate:.0f} labelled "
           f"taps/min); from-scratch curve interpolated log-linearly over the three fractions")
     for fam, pre, scr in (("pose", "finetune_rel", "scratch_rel"), ("pose", "finetune_rel", "scratch_abs"),
                           ("pose", "stack_rel", "scratch_rel"), ("pix", "finetune", "scratch"),

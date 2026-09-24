@@ -1,5 +1,5 @@
 """Task 2 desk: kbd-trained finger classifier applied at desk CTC anchors. No desk finger truth -> agreement of the
-predicted finger with the user's measured majority finger for the TRUE letter (truth forced alignment anchors);
+predicted finger with the typist's measured majority finger for the TRUE letter (truth forced alignment anchors);
 kbd OOF gives the same metric where finger truth exists. Caches per-word q tables for fusion.
   PYTHONPATH=. .venv/bin/python -m phase0.analysis.finger_deskeval [--tag v0]"""
 from __future__ import annotations

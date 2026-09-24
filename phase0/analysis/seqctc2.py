@@ -477,7 +477,7 @@ def ctc_per_char(model, st, wins, refs) -> float:
 
 
 def cmd_diag(a) -> int:
-    """Domain-gap check without any user labels in training: How-We-Type-only checkpoint read out on the user's
+    """Domain-gap check without any user labels in training: How-We-Type-only checkpoint read out on the typist's
     sessions in each label-free frame. Lower CTC loss per char = closer input distribution."""
     out = {}
     for ck in a.ckpts.split(","):

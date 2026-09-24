@@ -3,7 +3,7 @@
 **Recommended for blind test #2: frozen v3 personal** — `PYTHONPATH=. .venv/bin/python -m phase0.analysis.decipher2 data/sessions/<new-id> --version v3 --config recommended` (~8 min for a 2-min session incl. landmarks; `--version v2` = frozen v2 personal; `--score truth.txt` to score).
 
 1. Best method: Qwen3-8B-4bit generate-and-verify (8B rewrites the n-best; every candidate scored by exact CTC log-lik + λ·LLM + bonuses). Constrained (LLM-guided CTC prefix) decoding lost at every 3B setting; 8B constrained grid dropped.
-2. Personal context tuned on the user's keyboard windows only: profile+context prompt with a personal LoRA (Qwen2.5-0.5B) kbd WER 0.464→0.451; + keyboard-aware fuzzy candidates over the merged personal lexicon 0.430. Personal lexicon/word-LM terms in the 8B selection ≤0.007.
+2. Personal context tuned on my keyboard windows only: profile+context prompt with a personal LoRA (Qwen2.5-0.5B) kbd WER 0.464→0.451; + keyboard-aware fuzzy candidates over the merged personal lexicon 0.430. Personal lexicon/word-LM terms in the 8B selection ≤0.007.
 3. Cross-phrase context helped slightly; seed ensembling barely.
 4. v3 fuzzy candidates lowered the pool oracle (kbd 0.379→0.358, old desk 0.146→0.131) and recovered "claude", "codex", "really" on blind-1; "div" (not in lexicon) and "center" still fail.
 5. Selection is near its pool ceiling (blind-1 v3 0.210 vs oracle 0.161; old desk v2 0.131 vs 0.117) — remaining errors are letters never in the candidates, i.e. the camera/CTC model.

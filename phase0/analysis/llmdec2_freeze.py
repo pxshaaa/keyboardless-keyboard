@@ -3,7 +3,7 @@ generic : camera/decoder weights (method, llm, prompt w/o profile, K, lam, wb, c
           objective mean(kbd WER, old-desk WER), tiebreak CER sum; no personal terms.
 personal: the generic config's camera/decoder weights held fixed; personal-context weights (profile prompt, mu_pers, personal
           word-LM nu / nu_ng) chosen on the user-written keyboard windows only (kbd WER, tiebreak kbd CER then old WER),
-          because blind sessions contain the user's own phrases while the old desk session is generic prompted text.
+          because blind sessions contain the typist's own phrases while the old desk session is generic prompted text.
 Writes results/llmdec/frozen_config_v2.json (refuses to overwrite; LLMDEC_FROZEN_OUT for dry runs)."""
 
 from __future__ import annotations

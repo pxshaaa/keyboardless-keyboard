@@ -28,3 +28,4 @@ results/nextgen/resources/
 # Calibration prompts built from the author's own vocabulary; block5 is generic.
 phase0/phrases_calib*.txt
 !phase0/phrases_calib_block5.txt
+docs/private/

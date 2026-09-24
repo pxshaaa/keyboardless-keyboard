@@ -26,13 +26,13 @@ LIVESET = "s_zz-live-20260915-010345"
 
 # live truth: see results/beam/SUMMARY.md "live ground truth" for provenance of every line.
 LIVE_TRUTH = {
-    2: ("i will try this out now to talk as well", "high", "whisper 170.6-177.4s + coordinator note"),
-    3: ("i will write to you what i want to write to you", "high", "whisper 376.3-385.2s + coordinator note"),
+    2: ("i will try this out now to talk as well", "high", "whisper 170.6-177.4s + manual note"),
+    3: ("i will write to you what i want to write to you", "high", "whisper 376.3-385.2s + manual note"),
     4: ("if i talk slowly like i am doing right now i hope that this will still work", "high",
-        "whisper 398.8-411.5s (coordinator note has an extra 'it': 'doing it right now')"),
-    5: ("okay all campaigns are paused right now", "medium", "coordinator note only; whisper hallucinated this window"),
-    6: ("did you fix it now", "low", "coordinator note, itself parenthesised/uncertain; no whisper support"),
-    7: ("actually this is not working out", "high", "whisper 665.0-671.1s + coordinator note"),
+        "whisper 398.8-411.5s (manual note has an extra 'it': 'doing it right now')"),
+    5: ("okay all campaigns are paused right now", "medium", "manual note only; whisper hallucinated this window"),
+    6: ("did you fix it now", "low", "manual note, itself parenthesised/uncertain; no whisper support"),
+    7: ("actually this is not working out", "high", "whisper 665.0-671.1s + manual note"),
 }
 LIVE_HIGH = [2, 3, 4, 5, 7]   # headline live set (k=6 uncertain, k=0/1 unknown)
 

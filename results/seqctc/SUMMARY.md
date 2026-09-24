@@ -14,14 +14,14 @@
 ## Conclusion (plain English)
 1. Yes: the sequence model beats the per-tap pipeline on the desk session. With no desk labels at all, the How-We-Type-pretrained model reads the 20 desk phrases at CER 0.234 [0.190, 0.277] (pipeline 0.448; paired delta -0.214 [-0.261, -0.170]).
 2. With the weak supervision the pipeline also used (phrase text only, 5-fold cross-phrase), CER drops to 0.132 [0.102, 0.163], WER 0.326 (pipeline WER 0.745): most words now come out right.
-3. Even trained from scratch on the user's ~4,300 keystrokes it is better than the pipeline: zero-shot 0.388 (delta -0.060 [-0.102, -0.015]), desk-fine-tuned 0.224.
+3. Even trained from scratch on my ~4,300 keystrokes it is better than the pipeline: zero-shot 0.388 (delta -0.060 [-0.102, -0.015]), desk-fine-tuned 0.224.
 4. Public pretraining on real typing helps a lot: How We Type (30 people, mocap mapped to MediaPipe joints) cuts CER vs scratch by 0.15 on the desk zero-shot, 0.09 after desk fine-tuning and 0.10 on keyboard LOSO, at every data fraction.
 5. Public pretraining on sign language does not: FSboard fingerspelling is worse than scratch (desk +0.056 [+0.030, +0.082], keyboard LOSO +0.023 [+0.012, +0.034]) and only neutral after desk fine-tuning (+0.004 [-0.020, +0.028]).
 6. The character LM matters (~0.05-0.09 CER); AdaBN-style re-normalisation on the unlabelled desk session hurts in every condition and is not used.
-7. No saturation in sight: every doubling of the user's own keyboard data lowers desk CER by ~0.10 (scratch) / ~0.06 (pretrained).
+7. No saturation in sight: every doubling of my own keyboard data lowers desk CER by ~0.10 (scratch) / ~0.06 (pretrained).
 8. Log-linear extrapolation (4 points, crude): desk CER 0.20 at ~16k keystrokes from scratch or ~10k with How-We-Type pretraining, i.e. roughly 1-1.5 h more ordinary typing than the ~28 min used here.
 9. Caveats: one user, one rig; architecture, steps and LM weights were chosen on keyboard data only (pilot on fold 131629, LM grid on LOSO), never on the desk; pretraining is one checkpoint per public source with 3 fine-tuning seeds.
-10. Recommendation: drop per-tap key classification for text; pretrain on How We Type, fine-tune on the user's passive keyboard logs, then adapt with a few prompted desk phrases.
+10. Recommendation: drop per-tap key classification for text; pretrain on How We Type, fine-tune on my passive keyboard logs, then adapt with a few prompted desk phrases.
 
 ## Results (CER mean of 3 seeds [95% item bootstrap CI]; LM = char 6-gram prefix beam, alpha/beta tuned on keyboard LOSO)
 

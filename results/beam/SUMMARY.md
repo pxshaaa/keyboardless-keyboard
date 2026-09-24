@@ -158,19 +158,19 @@ Nothing was tuned on blind-2 or the live phrases.
 
 ### Live ground truth (reconstructed; `data/live/20260915-010345/truth.jsonl`, copy in `live_truth.jsonl`)
 
-`truth.jsonl` did not exist. Rebuilt from `results/live1/whisper_medium/audio.json` plus the coordinator notes
+`truth.jsonl` did not exist. Rebuilt from `results/live1/whisper_medium/audio.json` plus the manual notes
 in `results/live1/PROGRESS_NOTES.md`; the spoken phrase precedes each typed phrase.
 
 | k | truth | confidence | source |
 |---|---|---|---|
 | 0 | — | **unusable** | no utterance; typed raw `ooo`. Excluded. |
 | 1 | — | **unusable** | no utterance; typed raw `rrtha nour`. Excluded. |
-| 2 | i will try this out now to talk as well | high | whisper 170.6–177.4 s + coordinator |
-| 3 | i will write to you what i want to write to you | high | whisper 376.3–385.2 s + coordinator |
-| 4 | if i talk slowly like i am doing right now i hope that this will still work | high | whisper 398.8–411.5 s. Coordinator note has an extra "it" ("doing **it** right now"); the typed raw shows no evidence of it, so whisper's wording is used. |
-| 5 | okay all campaigns are paused right now | medium | coordinator only — whisper hallucinated this window |
-| 6 | did you fix it now | **low** | coordinator note, itself parenthesised/uncertain; no whisper support |
-| 7 | actually this is not working out | high | whisper 665.0–671.1 s + coordinator |
+| 2 | i will try this out now to talk as well | high | whisper 170.6–177.4 s + manual note |
+| 3 | i will write to you what i want to write to you | high | whisper 376.3–385.2 s + manual note |
+| 4 | if i talk slowly like i am doing right now i hope that this will still work | high | whisper 398.8–411.5 s. The manual note has an extra "it" ("doing **it** right now"); the typed raw shows no evidence of it, so whisper's wording is used. |
+| 5 | okay all campaigns are paused right now | medium | manual note only — whisper hallucinated this window |
+| 6 | did you fix it now | **low** | manual note, itself parenthesised/uncertain; no whisper support |
+| 7 | actually this is not working out | high | whisper 665.0–671.1 s + manual note |
 
 All live numbers above use k=2..7 (6 phrases, 57 words). The high-confidence subset k=2,3,4,5,7 (52 words)
 moves v4 from 87.7 % to 88.5 % and the 0.5B beam from 73.7 % to 75.0 %; no conclusion depends on which is used.
@@ -188,7 +188,7 @@ transcript without checking each window against `events.jsonl`.
 2. **Small n.** 37 segments, 307 truth words in total; blind-1, blind-2 and live are 5–6 segments each. A
    single segment moves any of those columns by 1–2 pt. No confidence intervals are reported because at this
    n they would swamp every difference discussed.
-3. **Live truth is partly reconstructed** (k=5 coordinator-only, k=6 weak) — see above.
+3. **Live truth is partly reconstructed** (k=5 manual-note-only, k=6 weak) — see above.
 4. The v4loso sets have no `__v4` fuzzy tag and their 8B/0.5B LM scores cover only the v3 pool, so the real v4
    selector cannot be run over the beam-extended pool on the desk sets without new MLX scoring. `SELECTOR
    current` is the frozen **v3** recommended output for the desk sets and the real **v4** output for live.

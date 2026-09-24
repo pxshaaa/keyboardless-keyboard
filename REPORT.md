@@ -74,7 +74,7 @@ Still-period false positives — the "it fires while my hands rest" bug — fell
 3. **Threshold tuned on out-of-fold probabilities.** Tuning on in-sample probabilities picked a
    badly over-fit operating point.
 4. **Motion-energy and resting-pose features inside the classifier**, rather than a separate
-   "is the user typing" gate. An explicit second-stage gate turned out nearly redundant
+   "is anyone typing" gate. An explicit second-stage gate turned out nearly redundant
    (12 -> 11 still-FPs); putting the same information in as features is what took the rate
    from 31% to 5%. Requiring 4 consecutive frames above threshold was worth more than the gate.
 5. **Depth bought nothing measurable** (65.6% with vs 70.3% without). Cross-validation marginally
@@ -160,7 +160,7 @@ for the supervised model — consistent with the tap-detection result.
   is the binding constraint); a temporal model over the tap *sequence*, since letter-transition
   statistics constrain which finger can follow which. Higher resolution is not the fix.
 
-Caveat: labels come from a standard touch-typing key→finger map and the user is demonstrably not
+Caveat: labels come from a standard touch-typing key→finger map and I am demonstrably not
 a strict touch typist, so some of the 44% error is label error. Treat 56% as a lower bound.
 
 ## Data scaling saturates early — measured, superseding the earlier extrapolation
@@ -312,7 +312,7 @@ Video-to-keylog sync is undocumented and would need verifying first.
 
 ### A retraction first
 The desk session `20260910-181947-desk` has **invalid ground truth**. The recorder prompted phrases
-expecting transcription; the user typed their own free-form thoughts instead, because the prompter's
+expecting transcription; I typed my own free-form thoughts instead, because the prompter's
 output went to a background log they never saw. Every number derived from it is void: the 0/12
 alignment failures, the "2x over-detection" (tap/char ratios were computed against a character count
 from phrases never typed), the "typed at half speed on the desk" claim, and the desk CER of 0.83.
@@ -452,7 +452,7 @@ typed:    'we should talk about this in person' produced: 'keep all about the so
 | Probability calibration | Neutral to -0.04 worse. |
 | Contact-point correction | Geometry fixable (98.8% of the 174 px scatter was one bug) but loses to the pose distribution downstream. |
 | Recall-trained detector | Worse at every matched density — the extra recall is the wrong recall. |
-| Public-corpus pretraining | Worth ~40-60 seconds of the user's own typing. |
+| Public-corpus pretraining | Worth ~40-60 seconds of my own typing. |
 | Depth / LiDAR | Mutually exclusive with the ultra-wide lens; three independent measurements say depth does not help. |
 
 ### Corrections made tonight
@@ -463,19 +463,19 @@ typed:    'we should talk about this in person' produced: 'keep all about the so
   nothing for cross-session generalisation.
 - **The rollover ceiling claim stays retracted** — max achievable recall under an 80 ms refractory
   is 99.8%, not ~72%.
-- The invalid desk session (`20260910-181947-desk`) remains void; the user typed freely rather than
+- The invalid desk session (`20260910-181947-desk`) remains void; I typed freely rather than
   transcribing, so its ground truth never matched.
 
 ## Public footage for key identification — tested, does not help
 
-Question: can online typing footage replace the user's own recording time? The one suitable
+Question: can online typing footage replace my own recording time? The one suitable
 corpus (`andrewt28/keystroke-typing-videos`: 800 clips, 51,336 keydowns, top-down MacBook) was
 already shown not to help tap *detection*. It was then tested for the current bottleneck, **key
 identification**, where per-class data is thinnest (~110 labels per key for us vs ~1,900 public).
 Code: `phase0/analysis/keypre.py`. Results: `results/keypre/`.
 
 Setup notes that would otherwise bite: public keyboard is US QWERTY (y/z mapped by physical
-position onto the user's QWERTZ); public wrists are out of frame so MediaPipe's guessed wrist made
+position onto my QWERTZ); public wrists are out of frame so MediaPipe's guessed wrist made
 every hand ~4x too large (hand scale now taken from knuckle width); contact crop taken 67 ms after
 keydown; labelled taps are 2,038 train + 172 held-out (not ~3,000), i.e. ~142 usable labels per
 minute of typing.
@@ -488,8 +488,8 @@ minute of typing.
 | 50% | 0.392 | 0.377 | -0.015 [-0.031, +0.000] |
 | 100% | 0.432 | 0.426 | -0.006 [-0.024, +0.011] |
 
-Worth -0.6 to -1.0 minutes of the user's recording time. Zero-shot (public model only) scores
-0.165 on the user's taps, below always guessing space (0.22), with hand identity at chance.
+Worth -0.6 to -1.0 minutes of my recording time. Zero-shot (public model only) scores
+0.165 on my taps, below always guessing space (0.22), with hand identity at chance.
 
 **Desk CER** (same 40 tap streams, same reduced grid, leave-one-phrase-out). Two matched
 comparisons, both showing no benefit:
@@ -507,7 +507,7 @@ both intervals touching zero.
 **Why it fails (measured):** on its own validation clips the public model gets 0.63 top-1, but
 0.40 from the still contact frame alone and only 0.15 from motion alone (chance-level). Shuffling
 fingertip patches between slots drops it to 0.19. It learned what that MacBook and camera look
-like, not the press. The user's crops and public crops are perfectly separable (domain AUC 1.000).
+like, not the press. My crops and public crops are perfectly separable (domain AUC 1.000).
 Resolution, the y/z layout swap and tracking quality were each checked and ruled out.
 
 **Completed accuracy table** (mean over 3 seeds; LOSO = leave-one-session-out over the three
@@ -531,7 +531,7 @@ every fraction, and the fine-tuned hand-relative pose model degrades catastrophi
 data is added (0.346 -> 0.146 LOSO), the collapse described below. Best configuration remains
 **both models trained from scratch on our data alone: 0.495 LOSO / 0.638 held-out**.
 
-**Verdict:** online footage cannot substitute for the user's own typing for this project. The only
+**Verdict:** online footage cannot substitute for my own typing for this project. The only
 suitable public dataset has now been tested for detection, key identification and desk decoding;
 none improves.
 
@@ -591,4 +591,4 @@ Full write-ups in `results/<name>/SUMMARY.md`. One user, one rig; desk numbers o
 | **`seqctc` — landmarks→text CTC, no tap detection** | How-We-Type-pretrained, trained on keyboard sessions: desk CER **0.234** zero-shot; +5-fold desk-phrase fine-tuning **0.132** | **beats the pipeline by a wide margin** |
 | **`seqctc2` — + Qwen word decoder** (tuned on keyboard windows only) | desk fine-tuned **CER 0.094, WER 0.151 (~85% words)**; continuous stream with pause segmentation CER 0.106 / WER 0.168; zero-shot WER 0.477 | **meets the 80–90% words goal on this session** |
 
-Caveats: the 20 desk phrases have been looked at by many experiments → confirm on a fresh desk session (`phase0/phrases_desk2.txt`, models frozen); closed 31k English vocabulary (the user's normal typing includes German); How We Type is CC-BY-NC (research only); leakage audit clean (no desk phrase in any training text; folds split by phrase).
+Caveats: the 20 desk phrases have been looked at by many experiments → confirm on a fresh desk session (`phase0/phrases_desk2.txt`, models frozen); closed 31k English vocabulary (my normal typing includes German); How We Type is CC-BY-NC (research only); leakage audit clean (no desk phrase in any training text; folds split by phrase).

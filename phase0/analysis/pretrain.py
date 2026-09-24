@@ -553,7 +553,7 @@ def cmd_diag(a) -> int:
 
 # ---------------------------------------------------------------- scaling
 def time_subset(t, sid, frac, seed):
-    """A contiguous window of each session -- the user simply recorded for less time.
+    """A contiguous window of each session -- that session simply ran shorter.
     Scattered blocks would make taps_gb.purge embargo across the holes and empty a fold."""
     rng = np.random.default_rng(seed)
     m = np.zeros(len(t), bool)

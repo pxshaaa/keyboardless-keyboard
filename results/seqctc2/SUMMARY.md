@@ -11,7 +11,7 @@
 7. Label-free session frame did not help (similarity: unchanged loss; affine: worse).
 8. Leakage audit clean: no desk phrase in keyboard, How We Type or LM texts (corpora contain ≤7 of 9 words of a phrase); only "let me know" shared; folds split by phrase; unused desk session 201720 has reworded prompts and is excluded; fine-tuning deterministic.
 9. Caveats: one user, 20 desk phrases, best model picked among 6 conditions on those phrases; closed 30.8k-word lexicon contains all 91 desk words; decoder tuning on 75 keyboard windows is noisy (±0.03–0.06 WER); How We Type is CC-BY-NC-4.0 (research only).
-10. Recommendation: How-We-Type checkpoint + keyboard logs, fine-tune with 30% How We Type mix, Qwen word decoder tuned on the user's keyboard windows; a few prompted desk phrases take ~75% → ~86% words. Confirm on a fresh desk session (`phase0/phrases_desk2.txt`) with models frozen.
+10. Recommendation: How-We-Type checkpoint + keyboard logs, fine-tune with 30% How We Type mix, Qwen word decoder tuned on my keyboard windows; a few prompted desk phrases take ~75% → ~86% words. Confirm on a fresh desk session (`phase0/phrases_desk2.txt`) with models frozen.
 
 | model | kbd LOSO char CER | zero-shot char CER | zero-shot Qwen (own) CER / WER | zero-shot dWER | fine-tuned Qwen (own) CER / WER | fine-tuned dWER | continuous fine-tuned WER |
 |---|---|---|---|---|---|---|---|
