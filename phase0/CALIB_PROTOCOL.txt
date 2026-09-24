@@ -1,0 +1,107 @@
+DESK CALIBRATION RECORDING PROTOCOL (spec M3, ctc_v5)
+=====================================================
+
+Goal: intent-labelled bare-desk typing of your own vocabulary, in FOUR short recordings with a
+phone remount between them, so the models also see different camera placements.
+
+  block 1  phase0/phrases_calib_block1.txt   20 prompts x 14 s ~ 4.7 min
+  block 2  phase0/phrases_calib_block2.txt   20 prompts x 14 s ~ 4.7 min
+  block 3  phase0/phrases_calib_block3.txt   20 prompts x 14 s ~ 4.7 min
+  block 4  phase0/phrases_calib_block4.txt   20 prompts x 14 s ~ 4.7 min
+
+About 19 minutes of typing, ~25 minutes including remounts. Blocks are separate recordings
+(separate session ids). Order does not matter; you can stop after any block and still use it.
+
+The 80 prompts come from phase0/phrases_calib.txt (65 short phrases) + phrases_calib_natural.txt
+(15 everyday sentences), split into blocks by character-transition coverage
+(phase0/analysis/calibration_plan.py). They cover your top personal words, every name and
+product term at least twice, and share no 4-word sequence with the blind-1/blind-2 texts.
+
+IMPORTANT - supported characters: the camera model only has a-z and space. Every prompt is
+lowercase letters and spaces only, and you type exactly what is shown, INCLUDING "getgermany"
+without the digit. Do not type digits, umlauts, ß or punctuation during a block.
+
+
+1. SETUP
+--------
+- Phone with WideCam on the stand, oblique top-down (60-70 degrees), both hands fully in frame
+  incl. little fingers, some bare desk visible below the hands, nothing near the frame edges.
+- Steady light, no window behind the hands. Phone: auto-lock off, DND on, charger connected.
+- Same desk and chair for all four blocks; same hand resting position (where the home row
+  would be), same wrist height.
+- REMOUNT BETWEEN BLOCKS, NEVER DURING ONE: after each block, move/re-aim the phone a little
+  (a few cm and a few degrees, keeping the framing rules above) so the four recordings differ
+  in camera placement. Do not touch the phone while a block is recording.
+- Optional check before each block (quit with q): .venv/bin/python -m phase0.capture.preview --camera auto
+  Start only with a steady "hands: 2".
+
+2. TYPING RULES
+---------------
+- Read the whole prompt, then type it ONCE, straight through, at your normal speed.
+- NO corrections, no backspace. If you mistype, keep going and simply do not confirm that
+  prompt in the review step - the label is whatever YOU say you typed, never what the model guesses.
+- Spaces with your thumb. Keep hitting where the keys would be.
+- Finish before the next prompt appears (14 s is ample for these lengths). If the next prompt
+  appears while you are still typing, stop and move on; that window is dropped automatically.
+- Rest your hands still for the remainder of each window (3-5 s), and do not touch the MacBook
+  keyboard during a block (space/enter would advance the prompter early).
+
+3. RECORDING COMMANDS (MacBook, repo root)
+------------------------------------------
+cd ~/Documents/misc/computer-vision-test
+
+.venv/bin/python -m phase0.capture.recorder --condition desk --backend net --camera auto \
+    --width 1280 --height 720 --fps 60 \
+    --phrases phase0/phrases_calib_block1.txt --phrase-seconds 14 --notes "calib block 1"
+
+# remount the phone slightly, then repeat with block2 / block3 / block4:
+.venv/bin/python -m phase0.capture.recorder --condition desk --backend net --camera auto \
+    --width 1280 --height 720 --fps 60 \
+    --phrases phase0/phrases_calib_block2.txt --phrase-seconds 14 --notes "calib block 2"
+.venv/bin/python -m phase0.capture.recorder --condition desk --backend net --camera auto \
+    --width 1280 --height 720 --fps 60 \
+    --phrases phase0/phrases_calib_block3.txt --phrase-seconds 14 --notes "calib block 3"
+.venv/bin/python -m phase0.capture.recorder --condition desk --backend net --camera auto \
+    --width 1280 --height 720 --fps 60 \
+    --phrases phase0/phrases_calib_block4.txt --phrase-seconds 14 --notes "calib block 4"
+
+Each run prints its session id (data/sessions/<yyyymmdd-hhmmss>-desk); note all four. Each run
+stops by itself after the last prompt; Ctrl-C stops early and keeps what was shown so far.
+
+4. AFTER RECORDING - TWO PASSES (labels are yours, not the model's)
+-------------------------------------------------------------------
+PASS 1 - extract windows and write the review files (no training):
+
+PYTHONPATH=. .venv/bin/python -m phase0.analysis.calib_ingest \
+    data/sessions/<b1> data/sessions/<b2> data/sessions/<b3> data/sessions/<b4> --review-only
+
+For each session it prints one line per prompt (the model's reading and an alignment margin,
+which are HINTS ONLY) and writes <session>/calibration_review.json. Prompts whose window shows
+no typing, or typing cut off by the next prompt, are marked unusable and need no review.
+
+PASS 2 - confirm what you actually typed, then train:
+
+  - Either edit each calibration_review.json: "status": "confirmed" for prompts you typed
+    correctly, "rejected" otherwise; if you typed something slightly different, correct "text"
+    to what you really typed and confirm it.
+  - Or state it on the command line per session, e.g.
+      ... data/sessions/<b1> --confirm 0-19 --reject 7,12 --review-only
+  Then run the ingest again without --review-only:
+
+PYTHONPATH=. .venv/bin/python -m phase0.analysis.calib_ingest \
+    data/sessions/<b1> data/sessions/<b2> data/sessions/<b3> data/sessions/<b4>
+
+Only confirmed prompts become training labels. The run adds them to the 31 existing labelled
+phrases, trains the 3 desk seeds ON THE MAC MINI (rsync + ssh + one GPU job via
+phase0.tools.gpulock; add --compute local only for a tiny test), writes
+.cache/ctc_v5/deploy/manifest.json and prints leave-one-session-out numbers on blind-1/blind-2
+before vs with your calibration data.
+
+Use the result with: decipher2_ctc3 --manifest .cache/ctc_v5/deploy/manifest.json
+Re-running later with different sessions: --out-root .cache/ctc_v6 --version v6
+
+5. DO NOT
+---------
+- Do not let the recognizer "certify" a label: an unconfirmed prompt is never used for training.
+- Do not record blind-3 in the same sitting; it is a separate session afterwards, with its
+  truth hashed (sha256) before decoding.

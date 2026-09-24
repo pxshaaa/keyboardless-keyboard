@@ -9,3 +9,22 @@ widecam/ios/build/
 widecam/ios/*.xcodeproj/xcuserdata/
 widecam/ios/WideCam.xcodeproj/project.xcworkspace/xcuserdata/
 .cache/
+demo/
+.env
+widecam/ios/local.env
+
+# Private by design: raw results can embed typed text or personal vocabulary; only write-ups are published.
+results/**/*.json
+results/**/*.jsonl
+results/**/*.log
+results/**/*.npz
+results/**/*.npy
+results/**/*.jpg
+results/**/*.png
+results/**/HANDOFF.md
+results/**/PROGRESS*.md
+results/STATUS_FOR_PASHA.md
+results/nextgen/resources/
+# Calibration prompts built from the author's own vocabulary; block5 is generic.
+phase0/phrases_calib*.txt
+!phase0/phrases_calib_block5.txt

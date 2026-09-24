@@ -1,3 +1,7 @@
 #!/bin/sh
-# Wireless install + launch of WideCam on Pasha's iPhone 15 Pro (needs devicectl tunnel up; no cable).
-cd "$(dirname "$0")" && xcrun devicectl device install app --device B63707B4-119C-57FA-A7FC-2F3D0E36145A build/WideCam.app && xcrun devicectl device process launch --device B63707B4-119C-57FA-A7FC-2F3D0E36145A com.pxshaa.widecam
+# Wireless install + launch via devicectl (no cable). DEVICE = id from `xcrun devicectl list devices`.
+cd "$(dirname "$0")"
+[ -f local.env ] && set -a && . ./local.env && set +a
+: "${DEVICE:?set DEVICE to your iPhone's devicectl id}"
+xcrun devicectl device install app --device "$DEVICE" build/WideCam.app && \
+  xcrun devicectl device process launch --device "$DEVICE" "${BUNDLE_ID_PREFIX:-com.example}.widecam"

@@ -1,0 +1,12 @@
+summary (mean over seeds; paired over eval taps / phrases vs base):
+  tap_g  oracle r1 fused 0.722 (base 0.705) d=+0.016 [-0.002,+0.035]  CER 0.594 (base 0.590) per-seed dCER [0.04, 0.001, -0.029]
+  tap_g  nolm   r1 fused 0.688 (base 0.705) d=-0.017 [-0.033,-0.001]  CER 0.612 (base 0.590) per-seed dCER [0.021, 0.012, 0.035]
+  tap_g  lm     r1 fused 0.707 (base 0.705) d=+0.002 [-0.012,+0.017]  CER 0.585 (base 0.590) per-seed dCER [-0.017, 0.017, -0.014]
+  tap_g  lm     r2 fused 0.710 (base 0.705) d=+0.005 [-0.012,+0.021]  CER 0.586 (base 0.590) per-seed dCER [0.011, 0.0, -0.022]
+  tap_g  lm     r3 fused 0.708 (base 0.705) d=+0.003 [-0.013,+0.019]  CER 0.602 (base 0.590) per-seed dCER [0.001, 0.037, -0.003]
+  abs    oracle r1 fused 0.614 (base 0.506) d=+0.109 [+0.085,+0.133]  CER 0.636 (base 0.679) per-seed dCER [-0.022, -0.05, -0.057]
+  abs    nolm   r1 fused 0.520 (base 0.506) d=+0.014 [-0.000,+0.029]  CER 0.667 (base 0.679) per-seed dCER [-0.014, -0.017, -0.006]
+  abs    lm     r1 fused 0.543 (base 0.506) d=+0.037 [+0.021,+0.053]  CER 0.653 (base 0.679) per-seed dCER [-0.022, -0.032, -0.022]
+  abs    lm     r2 fused 0.541 (base 0.506) d=+0.036 [+0.020,+0.052]  CER 0.659 (base 0.679) per-seed dCER [-0.022, -0.022, -0.015]
+  abs    lm     r3 fused 0.538 (base 0.506) d=+0.032 [+0.016,+0.049]  CER 0.651 (base 0.679) per-seed dCER [-0.021, -0.037, -0.026]
+=== END rc=0 22:00

@@ -229,3 +229,57 @@ the desk session the resting hands are not in the same place — left index tip 
 so it is not a pure camera translation and cannot be calibrated out from the landmarks alone.
 A fixed scene fiducial in shot is required before absolute pixels can be compared ACROSS
 sessions, however well they work within one.
+
+## AMENDMENT 8 — `pad` condition: built-in trackpad as touch ground truth (additive)
+
+WHY. Desk sessions have no touch ground truth; keyboard sessions have key travel. The MacBook's
+Force Touch trackpad is flat glass, in shot, and macOS's private MultitouchSupport framework reports
+every contact. Recording "typing" on it gives exact press/lift times on a desk-like surface.
+Protocol: `phase0/PAD_PROTOCOL.md`.
+
+CONDITION. `meta.json.condition` may be `"pad"`; session_id `<YYYYmmdd-HHMMSS>-pad`.
+`recorder --touchpad` (implied by `--condition pad`) adds touch logging to any condition; the
+default (no flag) is unchanged. Same process, same `time.monotonic()` clock rule.
+
+`meta.json` gains an optional `"touchpad"` object (device size, frames, downs, clock mode).
+Readers that ignore unknown keys are unaffected.
+
+### touches.jsonl  (one row per contact event; only glass contact, never hover)
+{"t": float, "t_dev": float, "t_rx": float, "frame": int, "event": "down"|"move"|"up",
+ "id": int, "finger": int, "hand": int, "state": int, "x_norm": float, "y_norm": float,
+ "x_mm": float, "y_mm": float, "vx": float, "vy": float, "major": float, "minor": float,
+ "angle": float, "size": float, "density": float, ["truncated": true]}
+- `t`: monotonic seconds. `t_dev` is the framework timestamp, `t_rx` the callback arrival time.
+  MEASURED on Mac15,6 / Darwin 25.2 with real taps:
+  - `t_dev` has its own epoch: 13,953.7 s ahead of monotonic, and not `mach_continuous_time`.
+  - Its clock runs **0.88% slow** against the host: slope 1.0067-1.0092 in every contact segment.
+  - Around an affine fit the residual is p95 0.55 ms, max 2.0 ms. A constant offset leaves 25.9 ms
+    over 3 s, i.e. about 5 s of drift over a 10-minute session.
+
+  So the online `t` is `t_rx` (`clock_mode: "arrival"`), or `t_dev` when the two agree within 2 s
+  (`"shared"`). `pad_labels` re-derives `t` offline from `t_dev` with a lower-envelope affine fit
+  to `t_rx` (`touchpad.map_clock`), which removes both drift and arrival jitter.
+  `meta.json.touchpad.host_per_dev_second` records the measured rate.
+- `id` is the contact path id: stable from down to up, reused after lift. `finger` and `hand` are
+  the framework's own guesses and are not ground truth.
+- `x_norm, y_norm` are in 0..1 with `y_norm = 1` at the far edge. `x_mm, y_mm` have their origin at
+  the far-left corner as the user sits, with y growing toward the user. Measured sensor size on
+  Mac15,6 is 124.8 x 76.8 mm.
+- `down` is the first frame in state make_touch/touching. `up` is the first frame out of it, or
+  the frame where the contact vanishes. `truncated` marks contacts still down at shutdown.
+- `density` is capacitance density, a pressure proxy only. Force Touch force is not exposed here.
+
+### Derived (phase0/analysis/pad_labels.py)
+- `taps_pad.jsonl` follows the taps.jsonl schema: `t` is the pad down time, `i` is the nearest
+  frame, and hand/finger come from the fingertip landmark nearest the contact point. That contact
+  point is projected through a pad-to-landmark-px homography fitted from four corner holds.
+  Additive keys: `src`, `handedness`, `contact_x/contact_y`, `d_px`, `d2_px`, `t_up`, `dur`,
+  `pad_id`, `x_mm/y_mm`, `density`.
+- Only contacts of <= 0.30 s with <= 4 mm travel are taps. Longer contacts are `rest`, and larger
+  travel is `slide`. Both are reported but not labelled.
+- `<session_id>-padtrain/` is a sibling folder of symlinks to the session's video, frames,
+  landmarks, meta and phrases, plus `keys.jsonl` with one `down`/`up` pair (key `unknown`) per pad
+  tap. Every tool that reads `keys.jsonl` down times (`taps_gb train`, `eval_taps`,
+  `touch_common.kt`) trains or scores on it unchanged.
+- LIMIT: hand/finger is a nearest-landmark assignment, NOT independent finger ground truth; only
+  the time and the pad position are measured.
