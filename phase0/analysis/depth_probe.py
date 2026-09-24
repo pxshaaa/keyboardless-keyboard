@@ -271,7 +271,7 @@ def main(argv=None) -> int:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("record")
-    r.add_argument("--host", default="192.168.178.24:8080")
+    r.add_argument("--host", default="192.168.1.23:8080")
     r.add_argument("--seconds", type=float, default=10.0)
     r.add_argument("--out", type=Path, required=True)
     r.add_argument("--label", default="depth")

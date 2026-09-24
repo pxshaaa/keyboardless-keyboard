@@ -1,0 +1,222 @@
+<title>Bare-Desk Swipe Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F2F4F6; --surface:#FFFFFF; --ink:#141C24; --muted:#56616C; --rule:#D5DBE1;
+  --accent:#B86E12; --accent-soft:#F6E6CF; --go:#2B7A62; --go-soft:#DCEFE8; --stop:#AE3D34; --stop-soft:#F5DEDB; --maybe:#6B5FA8; --maybe-soft:#E7E4F4;
+  --bar-muted:#AEB8C2;
+  --display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0E1317; --surface:#161D23; --ink:#E4EAEF; --muted:#98A4AF; --rule:#2A343D;
+    --accent:#E7A64A; --accent-soft:#3A2B17; --go:#5EC3A1; --go-soft:#16302A; --stop:#E57C72; --stop-soft:#3A1E1B; --maybe:#A89BE6; --maybe-soft:#262240;
+    --bar-muted:#4A5661;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0E1317; --surface:#161D23; --ink:#E4EAEF; --muted:#98A4AF; --rule:#2A343D;
+  --accent:#E7A64A; --accent-soft:#3A2B17; --go:#5EC3A1; --go-soft:#16302A; --stop:#E57C72; --stop-soft:#3A1E1B; --maybe:#A89BE6; --maybe-soft:#262240;
+  --bar-muted:#4A5661;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;padding-inline:20px;padding-block:40px 72px}
+main{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:48px}
+h1,h2,h3{font-family:var(--display);line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,5vw,2.9rem);font-weight:700;letter-spacing:-.01em}
+h2{font-size:1.6rem;font-weight:600}
+h3{font-size:1.15rem;font-weight:600}
+p{margin:0;max-width:65ch}
+.eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+section{display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-direction:column;gap:18px}
+.lede{font-size:1.15rem;color:var(--ink)}
+.verdict{background:var(--surface);border:1px solid var(--rule);border-left:4px solid var(--accent);border-radius:6px;padding:20px 22px;display:flex;flex-direction:column;gap:10px}
+.verdict strong{font-family:var(--display);font-size:1.3rem;font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.stat{padding:14px 16px;border-top:2px solid var(--rule);display:flex;flex-direction:column;gap:2px}
+.stat b{font-family:var(--display);font-size:2rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.stat span{font-size:.88rem;color:var(--muted)}
+.stat.hl{border-top-color:var(--accent)}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.92rem;min-width:560px}
+th,td{padding:10px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--rule)}
+tr:last-child td{border-bottom:0}
+th{font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono);white-space:nowrap}
+.typed{font-family:var(--mono);font-size:.86rem}
+.typed .miss{background:var(--stop-soft);color:var(--stop);padding:0 3px;border-radius:3px}
+.typed .ok{background:var(--go-soft);color:var(--go);padding:0 3px;border-radius:3px}
+.pill{display:inline-block;font-family:var(--mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;font-weight:500;white-space:nowrap}
+.pill.go{background:var(--go-soft);color:var(--go)}
+.pill.stop{background:var(--stop-soft);color:var(--stop)}
+.pill.maybe{background:var(--maybe-soft);color:var(--maybe)}
+.pill.done{background:var(--accent-soft);color:var(--accent)}
+.chart{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.chart svg{width:100%;height:auto;display:block}
+.chart .lbl{fill:var(--ink);font-family:var(--body);font-size:13px}
+.chart .sub{fill:var(--muted);font-family:var(--body);font-size:11.5px}
+.chart .val{fill:var(--ink);font-family:var(--mono);font-size:13px;font-weight:500}
+.chart .tick{fill:var(--muted);font-family:var(--mono);font-size:11px}
+.chart .grid{stroke:var(--rule);stroke-width:1}
+.chart .bar-hi{fill:var(--accent)}
+.chart .bar-lo{fill:var(--bar-muted)}
+.caption{font-size:.86rem;color:var(--muted);max-width:65ch}
+ul.plain{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;max-width:65ch}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.box{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.box h3{font-size:1.05rem}
+.ask{background:var(--accent-soft);border-radius:6px;padding:18px 20px;display:flex;flex-direction:column;gap:8px}
+code{font-family:var(--mono);font-size:.86em}
+footer{font-size:.84rem;color:var(--muted);display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--rule);padding-top:18px}
+@media (max-width:480px){body{padding-inline:16px}.stat b{font-size:1.7rem}}
+</style>
+
+<main>
+  <header>
+    <span class="eyebrow">computer-vision-test · feasibility study · 13 Sep 2026</span>
+    <h1>Can swipe-keyboard decoding get bare-desk typing to 100%?</h1>
+    <p class="lede">One phone camera above a bare desk turns hand motion into text. Blind test 2 read 82% of words. This study checks whether the trick behind Gboard and SwiftKey swipe typing — matching a finger's path against every word in your vocabulary — closes the rest of the gap.</p>
+    <div class="verdict">
+      <span class="eyebrow">Verdict</span>
+      <strong>Not with today's camera signal. The path helps only when the typing finger is known — and from one camera it isn't.</strong>
+      <p>On your keyboard recordings, a word's finger path picks the right word 96% of the time <em>if</em> we know which finger typed each letter. Guessing the finger drops that to 32%, and on the desk the path adds nothing measurable. Most remaining errors are words the camera evidence itself gets wrong, so the next gains must come from better evidence: more of your own labelled desk typing, plus a suggestion bar.</p>
+    </div>
+    <div class="stats">
+      <div class="stat hl"><b>82%</b><span>words correct, blind test 2 (frozen pipeline)</span></div>
+      <div class="stat"><b>−2</b><span>word errors of 250 from swipe-style decoding, best case</span></div>
+      <div class="stat"><b>96% → 32%</b><span>word top-1 from finger path: known finger vs guessed</span></div>
+      <div class="stat"><b>80–94%</b><span>right word inside a 5-word suggestion list</span></div>
+    </div>
+  </header>
+
+  <section>
+    <span class="eyebrow">Where we are</span>
+    <h2>Two blind desk tests, same person, one phone</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Pipeline</th><th class="num">Blind test 1<br>(6 phrases)</th><th class="num">Blind test 2<br>(5 phrases)</th><th class="num">Old desk session<br>(20 phrases, CV)</th></tr></thead>
+        <tbody>
+          <tr><td>Small decoder, first sequence model</td><td class="num">73%</td><td class="num">63%</td><td class="num">—</td></tr>
+          <tr><td>Frozen v3: 8B decoder, personal context, desk-trained camera models</td><td class="num">84%</td><td class="num">82%</td><td class="num">94%</td></tr>
+          <tr><td>+ swipe-style word-beam candidates</td><td class="num">89%*</td><td class="num">82%</td><td class="num">93%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="caption">Percentages are 1 − word error rate. *Blind test 1 is no longer truly blind — its errors were seen during development, so treat that gain as a hint (confidence interval touches zero).</p>
+  </section>
+
+  <section>
+    <span class="eyebrow">Anatomy of blind test 2</span>
+    <h2>Why the nine wrong words were wrong</h2>
+    <p>For every error we scored the typed text and the decoded text under the camera model (log-likelihood in nats; positive means the camera evidence favours what you actually typed).</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>You typed</th><th>Decoded</th><th class="num">Evidence for truth</th><th>What it means</th></tr></thead>
+        <tbody>
+          <tr><td class="typed"><span class="miss">sorry claude but</span> i need you…</td><td class="typed">i need you…</td><td class="num">+11.7 nats</td><td>Camera leans right, but the decoder never tried it</td></tr>
+          <tr><td class="typed">email <span class="miss">bifi</span> again</td><td class="typed">email me again</td><td class="num">+8.2 nats</td><td>A name; leans right, never generated</td></tr>
+          <tr><td class="typed">solved <span class="miss">by</span> the day</td><td class="typed">solved n the day</td><td class="num">−13.6 nats</td><td>Evidence points to the wrong word</td></tr>
+          <tr><td class="typed">no <span class="miss">wonder this does</span> not</td><td class="typed">no once is not</td><td class="num">−43.7 nats</td><td>Evidence strongly points to the wrong words</td></tr>
+          <tr><td class="typed">you had <span class="miss">deceived</span> me</td><td class="typed">you had achieved me</td><td class="num">−3.6 nats</td><td>Near-tie, evidence slightly wrong</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="caption">Even when the camera leaned toward the truth, a better search over the whole vocabulary still preferred a shorter wrong sentence (−143 vs −156 nats for “sorry claude but…”). A decoder can't recover what the evidence doesn't support.</p>
+  </section>
+
+  <section>
+    <span class="eyebrow">The swipe idea, measured</span>
+    <h2>A finger path identifies a word only when you know the finger</h2>
+    <div class="chart" role="img" aria-label="Bar chart of word top-1 accuracy from the finger-path scorer: keyboard with true finger 96 percent, keyboard with guessed finger 32 percent, keyboard with detector finger 10 percent or less.">
+      <svg viewBox="0 0 640 196" xmlns="http://www.w3.org/2000/svg">
+        <line class="grid" x1="260" y1="8" x2="260" y2="160"/>
+        <line class="grid" x1="430" y1="8" x2="430" y2="160"/>
+        <line class="grid" x1="600" y1="8" x2="600" y2="160"/>
+        <text class="lbl" x="0" y="32">Keyboard · true finger</text>
+        <text class="sub" x="0" y="48">label-derived upper bound</text>
+        <rect class="bar-hi" x="260" y="18" width="326.4" height="30" rx="2"/>
+        <text class="val" x="592" y="38" text-anchor="start">96%</text>
+        <text class="lbl" x="0" y="82">Keyboard · guessed finger</text>
+        <text class="sub" x="0" y="98">label-free, realistic</text>
+        <rect class="bar-lo" x="260" y="68" width="108.8" height="30" rx="2"/>
+        <text class="val" x="376" y="88">32%</text>
+        <text class="lbl" x="0" y="132">Keyboard · detector finger</text>
+        <text class="sub" x="0" y="148">current tap detector</text>
+        <rect class="bar-lo" x="260" y="118" width="34" height="30" rx="2"/>
+        <text class="val" x="302" y="138">≤10%</text>
+        <text class="tick" x="260" y="182" text-anchor="middle">0%</text>
+        <text class="tick" x="430" y="182" text-anchor="middle">50%</text>
+        <text class="tick" x="600" y="182" text-anchor="middle">100%</text>
+      </svg>
+      <p class="caption">Word top-1 from a SHARK²-style location scorer with a word-frequency prior, 728 typed words, leave-one-session-out. With 10% or 20% of taps missed or doubled, even the true-finger case falls to 68% and 45%.</p>
+    </div>
+    <div class="two">
+      <div class="box">
+        <h3>On the desk</h3>
+        <p>The same scorer added nothing measurable. An apparent +13–18 point gain turned out to be a leak: it came from knowing each word's letter count, and a constant score reproduced it exactly. With realistic, label-free inputs the fusion equals the camera model alone.</p>
+      </div>
+      <div class="box">
+        <h3>Vocabulary-only decoding</h3>
+        <p>Restricting output to your 35.8k-word vocabulary brings “claude”, “codex” and “best” in at rank 1 whenever the camera supports them. “sorry”, “bifi”, “by”, “wonder”, “does” and “deceived” never appear in the top 50 under any setting.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">What the literature says</span>
+    <h2>No published system reaches 100% without a pick step</h2>
+    <ul class="plain">
+      <li><strong>Swipe matching collapses on noisy surfaces.</strong> SHARK² drops to 42% on surface traces; neural swipe decoders reach 83–94% on phones with millions of training swipes.</li>
+      <li><strong>Closest systems to ours</strong> (typing on a flat surface decoded from hand tracking — Richardson 2020, StegoType 2024, TouchInsight 2024) reach about 2–3% character errors with an hour of per-user data or hundreds of typists, roughly 88–95% of words.</li>
+      <li><strong>Every ≥99% result</strong> (ATK, TOAST, TapType) uses touch or depth sensors, in-vocabulary prompts, or lets the user pick from candidates.</li>
+      <li><strong>What transfers best:</strong> sentence-level decoding with a language model (we already do this), your own intent-labelled data, name biasing with a letter-by-letter escape, and a top-3 suggestion bar.</li>
+    </ul>
+  </section>
+
+  <section>
+    <span class="eyebrow">Final spec</span>
+    <h2>What to build next, grounded in these results</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Step</th><th>Evidence</th><th>Effort</th><th>Call</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Your own labelled desk data</strong><br>30–60 min: your top 300 words and all names in short prompted phrases, plus natural sentences; fine-tune the desk camera models</td><td>Only lever that attacks errors where evidence is wrong; desk training already cut word errors from 14.6% to 5.8%</td><td class="num">1 d + your time</td><td><span class="pill go">Go · first</span></td></tr>
+          <tr><td><strong>Suggestion bar</strong><br>Top-3/5 words per slot from the decoder, names quick list</td><td>Right word in the top 5 for 80–94% of words (ideal word boundaries)</td><td class="num">1 d</td><td><span class="pill go">Go</span></td></tr>
+          <tr><td><strong>Vocabulary word beam</strong><br>Extra candidate source inside the current decoder, names included</td><td>−2 errors / 250 pooled; fixed “claude code or codex…” exactly</td><td class="num">0.5 d</td><td><span class="pill go">Go · small</span></td></tr>
+          <tr><td><strong>Finger / tap-count signal from the camera</strong><br>Per-finger contact classifier trained on keyboard sessions</td><td>Swipe path worth 96% top-1 if finger known; tap counts worth +13–18 pts — but current finger attribution is at chance</td><td class="num">2–4 d</td><td><span class="pill maybe">Research gate</span></td></tr>
+          <tr><td>Error-type tool</td><td>Built during this study</td><td class="num">—</td><td><span class="pill done">Done</span></td></tr>
+          <tr><td>Motor model + word-template scorer</td><td>Top-5 only 24–38% realistic; zero fusion gain after leak control</td><td class="num">—</td><td><span class="pill stop">No-go</span></td></tr>
+          <tr><td>Learned word scorer</td><td>Depends on finger attribution</td><td class="num">—</td><td><span class="pill stop">No-go</span></td></tr>
+          <tr><td>Cross-sentence 8B rescoring</td><td>Decoder already picks the best candidate available on blind test 2</td><td class="num">—</td><td><span class="pill stop">No-go now</span></td></tr>
+          <tr><td>Wider segment padding, separate names boost</td><td>No measurable effect</td><td class="num">—</td><td><span class="pill stop">No-go</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="two">
+      <div class="box">
+        <h3>Realistic targets</h3>
+        <p>Our estimate: about 88–92% of words fully automatic after the data step, and 95–98% with one tap on a suggestion. A guaranteed 100% fully automatic isn't supported by our data or by any published system.</p>
+      </div>
+      <div class="box">
+        <h3>How we'll know</h3>
+        <p>Freeze everything, then a fresh blind test 3 of at least 150 words with the answer hash recorded before decoding. Report words correct with confidence intervals and every error sorted by type.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="ask">
+    <span class="eyebrow">What's needed from you</span>
+    <h3>One calibration session and one blind test</h3>
+    <p>About 40–70 minutes total, phone above the desk as before: prompted phrases covering your most-used words and names, some natural typing, then a final blind test with at least 150 words you choose.</p>
+  </section>
+
+  <footer>
+    <span>Caveats: one user, 250 labelled desk words across three sessions; blind test 1 was seen during development; some word-beam settings were inspected on all sets.</span>
+    <span>Data &amp; code: <code>results/swipe/</code>, <code>phase0/analysis/swipe_*.py</code>, <code>docs/swipe_literature_notes.md</code>, <code>docs/SPEC_word_decoding.md</code>.</span>
+  </footer>
+</main>

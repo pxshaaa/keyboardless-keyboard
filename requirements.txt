@@ -9,3 +9,16 @@ pyarrow>=17
 scipy>=1.14
 matplotlib>=3.9
 pytest>=8
+
+# Recognition, decoding and experiments (versions as used; macOS arm64).
+torch>=2.14
+transformers>=5.17
+lightgbm>=4.7
+scikit-learn>=1.9
+joblib>=1.6
+pillow>=12
+zeroconf>=0.151
+# Optional: the 8B decoder runs through MLX on Apple Silicon (installed in its own venv, see phase0/analysis/llmdec_mlx.py).
+# mlx, mlx-lm
+# Optional: live demo speech labels and experiments.
+# sounddevice, openai-whisper, rtmlib, onnxruntime
