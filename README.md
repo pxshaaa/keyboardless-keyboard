@@ -16,7 +16,8 @@ Read the write-up for the full story. The short version of what the experiments 
 
 - Reading the whole hand movement as a sequence (CTC) works far better than detecting individual taps.
 - Most of the remaining errors are words the camera never proposes, so a bigger decoder can't fix them.
-- A straight-down camera is the worst angle for seeing whether a finger touched the desk. Almost every published system films hands at about 45 degrees.
+- A straight-down camera is the worst angle for seeing whether a finger touched the desk, and almost every published system films hands at about 45 degrees. But tilting the camera doesn't fix it either: on 30 people's real typing, re-projected to 45 degrees, fewer fingers get hidden and the text gets no better ([results/angle45](results/angle45/SUMMARY.md)).
+- The one geometry that looks promising in simulation is a small mirror on the desk, which gives the same top-down camera a second, low view and lets it triangulate fingertip height ([results/mirror](results/mirror/SUMMARY.md)). It is untested on real footage.
 - Several promising ideas (a pretrained contact model, a better hand tracker, image crops) made no difference once tested against proper controls.
 
 ## How it works
@@ -76,6 +77,20 @@ PYTHONPATH=. .venv/bin/python -m phase0.analysis.live_demo
 ```
 
 Training and full decoding are described in `REPORT.md`, `results/ctc_v3/SUMMARY.md` and `results/v4/SUMMARY.md`. They are research scripts, not a polished CLI, and some expect a second machine for heavy compute.
+
+## Open problems
+
+This is one person's project, and the honest state is "promising, not solved". If you work on camera typing, gesture input or hand tracking, these are the places where help would matter most:
+
+1. **Seeing contact from one camera.** From above, a press and a hover look almost the same. The mirror idea in `results/mirror/` is the best lead I have and needs a real recording.
+2. **More than one typist.** Everything here is trained and tested on my hands. Nobody knows how it transfers to someone else, and that is the question that decides whether this can be a product.
+3. **Honest evaluation.** The blind tests are 11 sentences in total. A shared, held-out set of desk typing recorded by several people would be worth more than any model change.
+4. **Live decoding.** The accurate decoder takes about half a minute per phrase; the fast one loses about 20 points of word accuracy. `results/beam/` shows how to drop the slowest stage.
+5. **Literal input.** Capitals, punctuation, digits and code identifiers are not handled yet.
+
+Every experiment, including the ones that failed, has a write-up under `results/*/SUMMARY.md` with numbers first and caveats at the end. Please read the relevant one before repeating something: most dead ends here are documented.
+
+Issues, pull requests and comparisons from your own setup are welcome. If you record sessions with WideCam, an issue with your numbers and camera placement is useful even without code.
 
 ## Security
 
